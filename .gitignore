@@ -1,0 +1,17 @@
+# Metals
+.metals/
+metals.sbt
+
+# Vim
+*.swp
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Miscellaneous
+target/
+.bloop/
+.bsp/
