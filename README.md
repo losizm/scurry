@@ -4,16 +4,21 @@
 
 The Groovy-_esque_ wrapper for [Scamper](https://github.com/losizm/scamper).
 
+
 ## Let's Scurry!
 
-Heres's a quick introduction to **Scurry**:
+Although there are no references to Groovy itself in the codebase, this library
+is intended for Groovy developers. It defines a typeless interface to Scamper
+utilites in favor of dynamic typing, which is a Groovy staple.
+
+Here's a quick example using the HTTP client:
 
 ```groovy
 import groovy.json.JsonSlurper
 import scurry.http.HttpClient
 
-// Create settings for HTTP client
-def settings = [
+// Create client using supplied settings
+def client = new HttpClient(
   accept: ['application/json', '*/*; q=0.2'],
   acceptEncoding: ['deflate', 'gzip'],
   bufferSize: 8192,
@@ -21,10 +26,7 @@ def settings = [
   continueTimeout: 1000,
   keepAlive: false,
   storeCookies: true
-]
-
-// Create client using settings
-def client = new HttpClient(settings)
+)
 
 // Create POST request
 def request = [
@@ -34,16 +36,16 @@ def request = [
     'Content-Type': 'application/json',
     'Authorization': 'Bearer 94c2f320-7120-4338-8e40-42bc2581dd05'
   ],
-  // Supply body as String, byte[], File, Path, InputStream, Reader, or
-  // scurry.http.BodyWriter
-  body: '''{ "to": ["Peter", "Mary"], "text": "Hello, friends!"] }'''
+  // Supply body as byte[], String, File, Path, InputStream, Reader,
+  // QueryString, Multipart, or BodyWriter
+  body: '''{ "to": ["Peter", "Mary"], "text": "Hello, world!"] }'''
 ]
 
-// Send request and process response
+// Send request and check response
 client.send(request) { response ->
   println "${response.statusCode} ${response.reasonPhrase}"
-  response.headers.forEach { name, value ->
-    println "$name: $value"
+  response.headers.each {
+    println "${it.name}: ${it.value}"
   }
 
   if (!response.isSuccessful) {
@@ -55,7 +57,6 @@ client.send(request) { response ->
   }
 }
 ```
-
 
 ## License
 

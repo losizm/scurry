@@ -16,11 +16,10 @@
 package scurry.http
 
 import java.lang.{ Boolean as JBoolean, Integer as JInteger }
-import java.io.{ BufferedReader, File, InputStream, OutputStream, Reader }
-import java.nio.file.Path
-import java.util.{ HashMap as JHashMap, LinkedList as JLinkedList }
+import java.util.HashMap as JHashMap
 
-import scamper.http.{ BodyParser, HttpMessage, HttpRequest, HttpResponse }
+import scamper.http.{ HttpRequest, HttpResponse }
+import scamper.http.cookies.{ RequestCookies, ResponseCookies }
 
 private object HttpMessageReader:
   def apply(req: HttpRequest): JMap[String, AnyRef] =
@@ -31,19 +30,21 @@ private object HttpMessageReader:
     map.put("query", QueryString(req.query))
     map.put("httpVersion", req.version.toString)
     map.put("headers", Headers(req.headers))
+    map.put("cookies", Cookies(req.cookies))
     map.put("body", Body(req))
     map
 
   def apply(res: HttpResponse): JMap[String, AnyRef] =
     val map = JHashMap[String, AnyRef]()
     map.put("httpVersion", res.version.toString)
-    map.put("statusCode", JInteger(res.statusCode))
+    map.put("statusCode", JInteger.valueOf(res.statusCode))
     map.put("reasonPhrase", res.reasonPhrase)
-    map.put("isInformational", JBoolean(res.isInformational))
-    map.put("isSuccessful", JBoolean(res.isSuccessful))
-    map.put("isRedirection", JBoolean(res.isRedirection))
-    map.put("isClientError", JBoolean(res.isClientError))
-    map.put("isServerError", JBoolean(res.isServerError))
+    map.put("isInformational", JBoolean.valueOf(res.isInformational))
+    map.put("isSuccessful", JBoolean.valueOf(res.isSuccessful))
+    map.put("isRedirection", JBoolean.valueOf(res.isRedirection))
+    map.put("isClientError", JBoolean.valueOf(res.isClientError))
+    map.put("isServerError", JBoolean.valueOf(res.isServerError))
     map.put("headers", Headers(res.headers))
+    map.put("cookies", Cookies(res.cookies))
     map.put("body", Body(res))
     map

@@ -16,11 +16,13 @@
 package scurry.http
 
 import java.lang.{ Integer as JInteger, Long as JLong }
-import java.util.{ HashMap as JHashMap, LinkedList as JLinkedList }
+import java.util.{ HashMap as JHashMap, Iterator as JIterator, LinkedList as JLinkedList }
+
+import scala.jdk.javaapi.CollectionConverters.asJava
 
 import scamper.http.QueryString as ScamperQueryString
 
-/** Defines query string. */
+/** Encapsulates query string. */
 class QueryString private[scurry] (query: ScamperQueryString):
   /**
    * Creates query string from supplied encoded query string.
@@ -30,7 +32,7 @@ class QueryString private[scurry] (query: ScamperQueryString):
   def this(query: String) = this(ScamperQueryString(query))
 
   /**
-   * Creates query string from supplied query parameters.
+   * Creates query string from supplied parameters.
    *
    * @param params query parameters
    */
@@ -63,7 +65,7 @@ class QueryString private[scurry] (query: ScamperQueryString):
    */
   def getInteger(name: String): JInteger =
     query.getInt(name)
-      .map(JInteger(_))
+      .map(JInteger.valueOf)
       .getOrElse(null)
 
   /**
@@ -72,8 +74,8 @@ class QueryString private[scurry] (query: ScamperQueryString):
    * @param name parameter name
    */
   def getLong(name: String): JLong =
-    query.getInt(name)
-      .map(JLong(_))
+    query.getLong(name)
+      .map(JLong.valueOf)
       .getOrElse(null)
 
   /**
@@ -87,16 +89,15 @@ class QueryString private[scurry] (query: ScamperQueryString):
       values
     }
 
-  /** Gets query string as `Map[String, String]`. */
-  def toMap(): JMap[String, String] =
-    query.toMap.foldLeft(JHashMap()) { (map, param) =>
-      map.put(param(0), param(1))
-      map
-    }
+  /** Gets iterator to parameters. */
+  def iterator(): JIterator[AnyRef] =
+    asJava(query.toSeq.map(toParam).iterator)
 
-  /** Gets query string as `Map[String, List[String]]`. */
-  def toMultiMap(): JMap[String, JList[String]] =
-    query.names.foldLeft(JHashMap()) { (map, name) =>
-      map.put(name, getValues(name))
-      map
-    }
+  private def toParam(name: String, value: String): JMap[String, AnyRef] =
+    val param = JHashMap[String, AnyRef]()
+    param.put("name", name)
+    param.put("value", value)
+    param
+
+  private[scurry] def toScamperQueryString: ScamperQueryString =
+    query

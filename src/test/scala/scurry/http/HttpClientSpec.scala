@@ -21,8 +21,16 @@ import java.io.File
 
 class HttpClientSpec extends org.scalatest.flatspec.AnyFlatSpec:
   private val sh = GroovyShell()
+  sh.setVariable("KB", 1024)
+  sh.setVariable("MB", 1024 * 1024)
+  sh.setVariable("resources", File("./src/test/resources"))
 
-  it should "send request and read response" in {
+  it should "send request and read response (1)" in {
     val script = File("./src/test/resources/scripts/bible.groovy")
-    sh.run(script, Array.empty[String])
+    sh.run(script, Array("localhost", "10080"))
+  }
+
+  it should "send request and read response (2)" in {
+    val script = File("./src/test/resources/scripts/barbershop.groovy")
+    sh.run(script, Array("localhost", "20080"))
   }

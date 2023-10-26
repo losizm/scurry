@@ -15,27 +15,51 @@
  */
 package scurry.http
 
-import java.lang.{ Boolean as JBoolean, Integer as JInteger }
-import java.io.{ BufferedReader, File, InputStream, OutputStream, Reader }
+import java.io.{ BufferedReader, File, InputStream, OutputStream }
 import java.nio.file.Path
-import java.util.{ HashMap as JHashMap, LinkedList as JLinkedList }
 
-import scamper.http.{ BodyParser, HttpMessage, HttpRequest, HttpResponse }
+import scamper.http.{ BodyParser, HttpMessage }
+import scamper.http.multipart.Multipart.bodyParser as MultipartBodyParser
 
 /** Encapsulates HTTP message body. */
 class Body private[scurry](res: HttpMessage):
   /**
+   * Drains message body.
+   *
+   * @param length maximum body length
+   */
+  def drain(length: Long): Unit =
+    res.drain(length)
+
+  /**
+   * Drains decoded message body to supplied sink.
+   *
+   * @param sink output stream
+   * @param length maximum body length
+   */
+  def drain(sink: OutputStream, length: Long): Unit =
+    res.drain(sink, length)
+
+  /**
    * Gets decoded message body as `String`.
    *
-   * @param length maximum length of body
+   * @param length maximum body length
    */
   def toString(length: Int): String =
     res.as(using BodyParser.string(length))
 
   /**
+   * Gets decoded message body as `QueryString`.
+   *
+   * @param length maximum body length
+   */
+  def toQueryString(length: Int): QueryString =
+    QueryString(res.as(using BodyParser.query(length)))
+
+  /**
    * Gets decoded message body as `Array[Byte]`.
    *
-   * @param length maximum length of body
+   * @param length maximum body length
    */
   def toBytes(length: Int): Array[Byte] =
     res.as(using BodyParser.bytes(length))
@@ -43,7 +67,7 @@ class Body private[scurry](res: HttpMessage):
   /**
    * Gets decoded message body as `InputStream`.
    *
-   * @param length maximum length of body
+   * @param length maximum body length
    */
   def toInputStream(length: Long): InputStream =
     res.as(using BodyParser.stream(length.max(Int.MaxValue).toInt))
@@ -51,7 +75,7 @@ class Body private[scurry](res: HttpMessage):
   /**
    * Gets decoded message body as `BufferedReader`.
    *
-   * @param length maximum length of body
+   * @param length maximum body length
    */
   def toReader(length: Long): BufferedReader =
     res.as(using BodyParser.reader(length.max(Int.MaxValue).toInt))
@@ -59,25 +83,43 @@ class Body private[scurry](res: HttpMessage):
   /**
    * Writes decoded message body to `File`.
    *
-   * If `dest` is directory, then new file is created in directory.
-   *
    * @param dest file location
-   * @param length maximum length of body
+   * @param length maximum body length
    *
    * @return file to which message body is written
+   * @note If `dest` is directory, then new file with randomly generated name is
+   * created in directory.
    */
   def toFile(dest: File, length: Long): File =
     res.as(using BodyParser.file(dest, length))
 
   /**
-   * Writes decoded message body to `File`.
+   * Writes decoded message body to `Path`.
    *
    * If `dest` is directory, then new file is created in directory.
    *
    * @param dest file location
-   * @param length maximum length of body
+   * @param length maximum body length
    *
    * @return file to which message body is written
    */
   def toPath(dest: Path, length: Long): Path =
     toFile(dest.toFile, length).toPath
+
+  /**
+   * Gets decoded message body as `Multipart`.
+   *
+   * @param dest directory location to which file content is stored
+   * @param length maximum body length
+   */
+  def toMultipart(dest: File, length: Long): Multipart =
+    Multipart(res.as(using MultipartBodyParser(dest, length)))
+
+  /**
+   * Gets decoded message body as `Multipart`.
+   *
+   * @param dest directory location to which file content is stored
+   * @param length maximum body length
+   */
+  def toMultipart(dest: Path, length: Long): Multipart =
+    toMultipart(dest.toFile, length)

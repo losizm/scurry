@@ -27,7 +27,7 @@ class HttpClient private[scurry] (settings: ClientSettings):
    * Creates HTTP client using supplied settings.
    *
    * ### Client Settings
-   * 
+   *
    * The following provides example settings:
    *
    * ```
@@ -67,7 +67,7 @@ class HttpClient private[scurry] (settings: ClientSettings):
    * Sends request.
    *
    * ### HTTP Request
-   * 
+   *
    * The following provides example HTTP request:
    *
    * ```
@@ -78,8 +78,8 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *     'Content-Type': 'application/json',
    *     'Authorization': 'Bearer 94c2f320-7120-4338-8e40-42bc2581dd05'
    *   ],
-   *   // Supply body as String, Array[Byte], File, Path, InputStream, Reader,
-   *   // or scurry.http.BodyWriter
+   *   // Supply body as Array[Byte], String, File, Path, InputStream, Reader,
+   *   // QueryString, Multipart, or BodyWriter
    *   body: '''{ "to": ["Peter", "Mary"], "text": "Hello, friends!"] }'''
    * ]
    * ```
@@ -99,16 +99,64 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *     'Date': 'Mon, 23 Oct 2023 16:11:12 GMT',
    *     'Connection': 'close'
    *   ],
-   *   body: ... // See scurry.http.Body 
+   *   body: ... // See scurry.http.Body
    * ]
    * ```
    *
    * @param req outgoing request
    * @param handler response handler
    *
-   * @see [[Body]], [[BodyWriter]]
+   * @see [[Body]], [[BodyWriter]], [[Multipart]], [[QueryString]]
    */
-  def send[T](req: JMap[String, AnyRef], handler: JMap[String, AnyRef] => T): T =
+  def send[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
     httpClient.send(toScamperHttpRequest(req)) { res =>
       handler(HttpMessageReader(res))
     }
+
+  /**
+   * Sends GET request.
+   *
+   * @param req outgoing request
+   * @param handler response handler
+   *
+   * @see [[send]]
+   */
+  def get[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
+    req.put("method", "GET")
+    send(req, handler)
+
+  /**
+   * Sends POST request.
+   *
+   * @param req outgoing request
+   * @param handler response handler
+   *
+   * @see [[send]]
+   */
+  def post[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
+    req.put("method", "POST")
+    send(req, handler)
+
+  /**
+   * Sends PUT request.
+   *
+   * @param req outgoing request
+   * @param handler response handler
+   *
+   * @see [[send]]
+   */
+  def put[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
+    req.put("method", "PUT")
+    send(req, handler)
+
+  /**
+   * Sends DELETE request.
+   *
+   * @param req outgoing request
+   * @param handler response handler
+   *
+   * @see [[send]]
+   */
+  def delete[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
+    req.put("method", "DELETE")
+    send(req, handler)

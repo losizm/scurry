@@ -16,32 +16,29 @@
 package scurry.http
 
 import java.lang.{ Integer as JInteger, Long as JLong, Short as JShort }
-import java.time.Instant
-import java.util.Date
 
 import scala.collection.mutable.ListBuffer
 
 import scamper.http.QueryString as ScamperQueryString
 
-private object toScamperQueryString:
+private object toScamperQueryString extends Converter:
   def apply(map: JMap[String, AnyRef]): ScamperQueryString =
     val params = ListBuffer[(String, String)]() 
 
     try
       map.forEach {
-        case (name: String, value: String)    => params += name -> value
-        case (name: String, value: JShort)    => params += name -> value.toString
-        case (name: String, value: JInteger)  => params += name -> value.toString
-        case (name: String, value: JLong)     => params += name -> value.toString
-        case (name: String, values: JList[?]) => values.forEach {
+        case (name, value: String)    => params += name -> value
+        case (name, value: JShort)    => params += name -> value.toString
+        case (name, value: JInteger)  => params += name -> value.toString
+        case (name, value: JLong)     => params += name -> value.toString
+        case (name, values: JList[?]) => values.forEach {
           case value: String   => params += name -> value
           case value: JShort   => params += name -> value.toString
           case value: JInteger => params += name -> value.toString
           case value: JLong    => params += name -> value.toString
-          case _               => throw IllegalArgumentException(s"Invalid parameter: $name")
+          case _               => bad(s"Invalid query string parameter: $name")
         }
-        case (_, _) => throw IllegalArgumentException("Invalid query string")
+        case (name, _) => bad(s"Invalid query string parameter: $name")
       }
-
       ScamperQueryString(params.toSeq)
-    catch case _: Exception => throw IllegalArgumentException("query string")
+    catch case cause: Exception => throw bad("Invalid query string", cause)

@@ -17,13 +17,22 @@ package scurry.http
 
 import java.lang.{ Integer as JInteger, Long as JLong }
 import java.time.Instant
-import java.util.{ Date, LinkedList as JLinkedList }
-import java.util.stream.Stream
+import java.util.{ Collections, Date, Iterator as JIterator, LinkedList as JLinkedList }
+
+import scala.jdk.javaapi.CollectionConverters.asJava
 
 import scamper.http.*
 
-/** Defines HTTP headers. */
+/** Encapsulates HTTP headers. */
 class Headers private[scurry] (headers: Seq[Header]):
+  /**
+   * Creates headers from supplied fields.
+   *
+   * @param fields header fields
+   */
+  def this(fields: JMap[String, AnyRef]) =
+    this(toScamperHeaders(fields))
+
   /**
    * Gets header value.
    *
@@ -40,7 +49,7 @@ class Headers private[scurry] (headers: Seq[Header]):
   def getInteger(name: String): JInteger =
     headers.getHeader(name)
       .map(_.intValue)
-      .map(JInteger(_))
+      .map(JInteger.valueOf)
       .getOrElse(null)
 
   /**
@@ -51,7 +60,7 @@ class Headers private[scurry] (headers: Seq[Header]):
   def getLong(name: String): JLong =
     headers.getHeader(name)
       .map(_.longValue)
-      .map(JLong(_))
+      .map(JLong.valueOf)
       .getOrElse(null)
 
   /**
@@ -86,20 +95,9 @@ class Headers private[scurry] (headers: Seq[Header]):
       values
     }
 
-  /**
-   * Generates stream of mapped headers using supplied function.
-   *
-   * @param f mapper function
-   */
-  def map[T](f: (String, String) => T): Stream[T] =
-    headers.foldLeft(Stream.builder[T]()) { (stream, header) =>
-      stream.add(f(header.name, header.value))
-    }.build()
+  /** Gets iterator to headers. */
+  def iterator(): JIterator[AnyRef] =
+    asJava(headers.iterator)
 
-  /**
-   * Iterates over headers passing each name and value to supplied function.
-   *
-   * @param f function
-   */
-  def forEach[T](f: (String, String) => T): Unit =
-    headers.foreach { header => f(header.name, header.value) }
+  private[scurry] def toScamperHeaders: Seq[Header] =
+    headers

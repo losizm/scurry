@@ -18,7 +18,6 @@ package scurry.http
 import java.io.File
 import java.lang.{ Boolean as JBoolean, Integer as JInteger, Short as JShort }
 import java.nio.file.Path
-import java.util.{ HashMap as JHashMap, LinkedList as JLinkedList }
 import javax.net.ssl.TrustManager
 
 import scala.collection.mutable.ListBuffer
@@ -71,11 +70,11 @@ private object toScamperClientSettings extends Converter:
       case value: JMap[?, ?]   =>
         try
           (value.get("host"), value.get("port"), value.get("secure")) match
-            case (null, null, null) =>
+            case (null, null, null)                               => // Ignore
             case (host: String, null,           secure: JBoolean) => settings.resolveTo(host, None, secure)
             case (host: String, port: JShort,   secure: JBoolean) => settings.resolveTo(host, port.intValue, secure)
             case (host: String, port: JInteger, secure: JBoolean) => settings.resolveTo(host, port, secure)
-        catch case _: Exception => bad("resolveTo")
+        catch case cause: Exception => bad("resolveTo", cause)
       case _ => bad("resolveTo")
     }
 
@@ -85,10 +84,10 @@ private object toScamperClientSettings extends Converter:
       case value: JMap[?, ?]   =>
         try
           (value.get("truststore"), value.get("type"), value.get("password")) match
-            case (null, null, null) =>
+            case (null, null, null)                                   => // Ignore
             case (truststore: String, kind: String, password: String) => settings.trust(File(truststore), kind, Option(password))
             case (truststore: File,   kind: String, password: String) => settings.trust(truststore, kind, Option(password))
             case (truststore: Path,   kind: String, password: String) => settings.trust(truststore.toFile, kind, Option(password))
-        catch case _: Exception => bad("trust")
+        catch case cause: Exception => bad("trust", cause)
       case _ => bad("trust")
     }

@@ -19,8 +19,8 @@ private trait Converter:
   def convert[I, O](name: String, value: I, converter: I => O): O =
     try
       converter(value)
-    catch case _: Exception =>
-      bad(name)
+    catch case cause: Exception =>
+      bad(name, cause)
 
-  def bad(message: String): Nothing =
-    throw IllegalArgumentException(message)
+  def bad(message: String, cause: Throwable = null): Nothing =
+    throw IllegalArgumentException(message, cause)

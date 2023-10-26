@@ -24,18 +24,18 @@ import scala.collection.mutable.ListBuffer
 import scamper.http.Header
 
 private object toScamperHeaders:
-  def apply(map: JMap[?, ?]): Seq[Header] =
+  def apply(map: JMap[String, AnyRef]): Seq[Header] =
     val headers = ListBuffer[Header]() 
 
     try
       map.forEach {
-        case (name: String, value: String)    => headers += Header(name, value)
-        case (name: String, value: JShort)    => headers += Header(name, value.intValue)
-        case (name: String, value: JInteger)  => headers += Header(name, value)
-        case (name: String, value: JLong)     => headers += Header(name, value)
-        case (name: String, value: Instant)   => headers += Header(name, value)
-        case (name: String, value: Date)      => headers += Header(name, value.toInstant)
-        case (name: String, values: JList[?]) => values.forEach {
+        case (name, value: String)    => headers += Header(name, value)
+        case (name, value: JShort)    => headers += Header(name, value.intValue)
+        case (name, value: JInteger)  => headers += Header(name, value)
+        case (name, value: JLong)     => headers += Header(name, value)
+        case (name, value: Instant)   => headers += Header(name, value)
+        case (name, value: Date)      => headers += Header(name, value.toInstant)
+        case (name, values: JList[?]) => values.forEach {
           case value: String   => headers += Header(name, value)
           case value: JShort   => headers += Header(name, value.intValue)
           case value: JInteger => headers += Header(name, value)
@@ -44,8 +44,8 @@ private object toScamperHeaders:
           case value: Date     => headers += Header(name, value.toInstant)
           case _               => throw IllegalArgumentException(s"Invalid header: $name")
         }
-        case (_, _) => throw IllegalArgumentException("Invalid headers")
+        case (name, _) => throw IllegalArgumentException(s"Invalid header: $name")
       }
 
       headers.toSeq
-    catch case _: Exception => throw IllegalArgumentException("Invalid headers")
+    catch case cause: Exception => throw IllegalArgumentException("Invalid headers", cause)

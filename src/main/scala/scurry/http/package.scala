@@ -16,7 +16,15 @@
 package scurry.http
 
 /** Defines type alias to `java.util.Map`. */
-type JMap[K, V] = java.util.Map[K, V]
+private type JMap[K, V] = java.util.Map[K, V]
 
 /** Defines type alias to `java.util.List`. */
-type JList[T] = java.util.List[T]
+private type JList[T] = java.util.List[T]
+
+/** Casts map type parameters. */
+private def toMap[K, V](map: JMap[?, ?]): JMap[K, V] =
+  map.asInstanceOf[JMap[K, V]]
+
+/** Casts list type parameters. */
+private def toList[T](list: JList[?]): JList[T] =
+  list.asInstanceOf[JList[T]]

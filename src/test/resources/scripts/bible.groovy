@@ -1,11 +1,13 @@
 import groovy.json.JsonSlurper
+
 import java.time.Instant
+
 import scurry.http.HttpClient
 
 
-def maxLength = 256 * 1024
+def final maxLength = 256 * KB
 
-def settings = [
+def httpClient = new HttpClient(
   bufferSize: 4096,
   readTimeout: 1000,
   continueTimeout: 500,
@@ -18,9 +20,7 @@ def settings = [
     port: 10080,
     secure: false
   ]
-]
-
-def httpClient = new HttpClient(settings)
+)
 
 def req = [
   method: "GET",
@@ -37,8 +37,8 @@ def req = [
 
 def verses = httpClient.send(req) { res ->
   println "${res.httpVersion} ${res.statusCode} ${res.reasonPhrase}"
-  res.headers.forEach { name, value ->
-    println "$name: $value"
+  res.headers.each { header ->
+    println "${header.name}: ${header.value}"
   }
   println()
 
