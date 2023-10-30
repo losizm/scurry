@@ -15,14 +15,19 @@
  */
 package scurry.http
 
-import scamper.http.client.ClientSettings
+import scamper.http.RequestMethod
+import scamper.http.client.ClientSettings as ScamperClientSettings
+import scamper.http.cookies.RequestCookies
+import RequestMethod.Registry.*
+
+import settings.*
 
 /**
  * Defines HTTP client.
  *
  * @define asterisk *
  */
-class HttpClient private[scurry] (settings: ClientSettings):
+class HttpClient private[scurry] (settings: ScamperClientSettings):
   /**
    * Creates HTTP client using supplied settings.
    *
@@ -37,8 +42,8 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *   bufferSize: 8192,
    *   readTimeout: 15000,
    *   continueTimeout: 1000,
-   *   keepAlive: false,
-   *   storeCookies: true,
+   *   keepAliveEnabled: false,
+   *   cookieStoreEnabled: true,
    *   // Used to resolve non-absolute URLs
    *   resolveTo: [
    *     host: 'api.example.com',
@@ -59,9 +64,14 @@ class HttpClient private[scurry] (settings: ClientSettings):
   def this(settings: JMap[String, AnyRef]) = this(toScamperClientSettings(settings))
 
   /** Creates HTTP client using default settings. */
-  def this() = this(ClientSettings())
+  def this() = this(ScamperClientSettings())
 
   private lazy val httpClient = settings.toHttpClient()
+  private lazy val currentSettings = ActiveClientSettings(httpClient)
+
+  /** Gets client settings. */
+  def getSettings(): ClientSettings =
+    currentSettings
 
   /**
    * Sends request.
@@ -108,10 +118,8 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *
    * @see [[Body]], [[BodyWriter]], [[Multipart]], [[QueryString]]
    */
-  def send[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
-    httpClient.send(toScamperHttpRequest(req)) { res =>
-      handler(HttpMessageReader(res))
-    }
+  def send[T](req: AnyRef, handler: HttpResponse => T): T =
+    sendRequest(req, None, handler)
 
   /**
    * Sends GET request.
@@ -121,9 +129,8 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *
    * @see [[send]]
    */
-  def get[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
-    req.put("method", "GET")
-    send(req, handler)
+  def get[T](req: AnyRef, handler: HttpResponse => T): T =
+    sendRequest(req, Some(Get), handler)
 
   /**
    * Sends POST request.
@@ -133,9 +140,8 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *
    * @see [[send]]
    */
-  def post[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
-    req.put("method", "POST")
-    send(req, handler)
+  def post[T](req: AnyRef, handler: HttpResponse => T): T =
+    sendRequest(req, Some(Post), handler)
 
   /**
    * Sends PUT request.
@@ -145,9 +151,8 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *
    * @see [[send]]
    */
-  def put[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
-    req.put("method", "PUT")
-    send(req, handler)
+  def put[T](req: AnyRef, handler: HttpResponse => T): T =
+    sendRequest(req, Some(Put), handler)
 
   /**
    * Sends DELETE request.
@@ -157,6 +162,30 @@ class HttpClient private[scurry] (settings: ClientSettings):
    *
    * @see [[send]]
    */
-  def delete[T](req: JMap[String, AnyRef], handler: AnyRef => T): T =
-    req.put("method", "DELETE")
-    send(req, handler)
+  def delete[T](req: AnyRef, handler: HttpResponse => T): T =
+    sendRequest(req, Some(Delete), handler)
+
+  /**
+   * Sends WebSocket request.
+   *
+   * @param req outgoing request
+   * @param handler websocket session handler
+   */
+  def websocket[T](req: AnyRef, handler: WebSocket => T): T =
+    val real = toRealRequest(req, Some(Get))
+    httpClient.websocket(real.target, real.headers, real.cookies) { session =>
+      handler(WebSocket(session))
+    }
+
+  private def sendRequest[T](req: AnyRef, method: Option[RequestMethod], handler: HttpResponse => T): T =
+    val real = toRealRequest(req, method)
+    httpClient.send(real) { res => handler(HttpResponse(res)) }
+
+  private def toRealRequest(req: AnyRef, method: Option[RequestMethod]): ScamperHttpRequest =
+    val real = req match
+      case req: ScamperHttpRequest => req
+      case req: HttpRequest        => req.scamperHttpMessage
+      case req: JMap[?, ?]         => toScamperHttpRequest(asMap[String, AnyRef](req))
+      case _                       => throw IllegalArgumentException("Invalid request")
+
+    method.map(real.setMethod).getOrElse(real)

@@ -1,6 +1,6 @@
 organization  := "com.github.losizm"
 name          := "scurry"
-version       := "0.2.0"
+version       := "0.3.0"
 versionScheme := Some("early-semver")
 description   := "The Groovy-esque wrapper for Scamper"
 homepage      := Some(url("https://github.com/losizm/scurry"))
@@ -16,10 +16,12 @@ Compile / doc / scalacOptions := Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.losizm" %% "scamper"     % "38.0.0" % "provided",
-  "org.apache.groovy" %  "groovy"      % "4.0.15" % "test",
-  "org.apache.groovy" %  "groovy-json" % "4.0.15" % "test",
-  "org.scalatest"     %% "scalatest"   % "3.2.17" % "test"
+  "com.github.losizm" %% "scamper"         % "39.0.0" % "provided",
+  "ch.qos.logback"    %  "logback-classic" % "1.3.11" % "test",
+  "com.typesafe"      %  "config"          % "1.4.3"  % "test",
+  "org.apache.groovy" %  "groovy"          % "4.0.15" % "test",
+  "org.apache.groovy" %  "groovy-json"     % "4.0.15" % "test",
+  "org.scalatest"     %% "scalatest"       % "3.2.17" % "test"
 )
 
 scmInfo := Some(

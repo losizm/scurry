@@ -13,8 +13,8 @@ def httpClient = new HttpClient(
   continueTimeout: 500,
   accept: ['application/json; q=0.8', '*/*; q=0.2'],
   acceptEncoding: ['deflate', 'gzip'],
-  keepAlive: false,
-  storeCookies: false,
+  keepAliveEnabled: false,
+  cookieStoreEnabled: false,
   resolveTo: [
     host: 'localhost',
     port: 10080,
@@ -36,11 +36,11 @@ def req = [
 ]
 
 def verses = httpClient.send(req) { res ->
-  println "${res.httpVersion} ${res.statusCode} ${res.reasonPhrase}"
+  log.info "${res.httpVersion} ${res.statusCode} ${res.reasonPhrase}"
   res.headers.each { header ->
-    println "${header.name}: ${header.value}"
+    log.info "${header.name}: ${header.value}"
   }
-  println()
+  log.info ""
 
   def bytes = res.body.toBytes(maxLength)
   def json  = new JsonSlurper()
@@ -48,10 +48,10 @@ def verses = httpClient.send(req) { res ->
 }
 
 verses.each { verse ->
-  println "Testament: ${verse.testament}"
-  println "Book: ${verse.book}"
-  println "Chapter: ${verse.chapter}"
-  println "Number: ${verse.number}"
-  println "Text: ${verse.text}"
-  println()
+  log.info "Testament: ${verse.testament}"
+  log.info "Book: ${verse.book}"
+  log.info "Chapter: ${verse.chapter}"
+  log.info "Number: ${verse.number}"
+  log.info "Text: ${verse.text}"
+  log.info ""
 }

@@ -15,24 +15,20 @@
  */
 package scurry.http
 
-import java.io.{ OutputStream, OutputStreamWriter, Reader }
+import scamper.http.server.{ PathParameters, ServerHttpRequest }
+import scamper.http.types.MediaType
 
-/** Defines body writer. */
-@FunctionalInterface
-trait BodyWriter:
-  /**
-   * Writes body to given output stream.
-   *
-   * @param out output stream
-   */
-  def write(out: OutputStream): Unit
+private class ServerSideHttpRequest(req: ScamperHttpRequest) extends HttpRequest(req) with ServerSideHttpMessage:
+  def this(req: JMap[String, AnyRef]) =
+    this(toScamperHttpRequest(req))
 
-private class ReaderBodyWriter(in: Reader) extends BodyWriter:
-  def write(out: OutputStream): Unit =
-    val writer = OutputStreamWriter(out)
-    val buf = Array[Char](8192)
-    var len = 0
+  def getPathParameters(): PathParameters =
+    scamperHttpMessage.pathParams
 
-    while { len = in.read(buf); len != 0 } do
-      writer.write(buf, 0, len)
-    in.close()
+  def continue(): Boolean =
+    scamperHttpMessage.continue()
+
+  def findAccepted(types: JList[String]): String =
+    scamperHttpMessage.findAccepted(toSeq(types).map(MediaType(_)))
+      .map(_.toString)
+      .getOrElse(null)

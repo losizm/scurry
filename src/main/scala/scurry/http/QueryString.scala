@@ -16,11 +16,9 @@
 package scurry.http
 
 import java.lang.{ Integer as JInteger, Long as JLong }
-import java.util.{ HashMap as JHashMap, Iterator as JIterator, LinkedList as JLinkedList }
+import java.util.HashMap as JHashMap
 
 import scala.jdk.javaapi.CollectionConverters.asJava
-
-import scamper.http.QueryString as ScamperQueryString
 
 /** Encapsulates query string. */
 class QueryString private[scurry] (query: ScamperQueryString):
@@ -45,10 +43,7 @@ class QueryString private[scurry] (query: ScamperQueryString):
 
   /** Gets parameter names. */
   def getNames(): JList[String] =
-    query.names.foldLeft(JLinkedList()) { (names, name) =>
-      names.add(name)
-      names
-    }
+    toList(query.names)
 
   /**
    * Gets parameter value.
@@ -84,20 +79,17 @@ class QueryString private[scurry] (query: ScamperQueryString):
    * @param name parameter name
    */
   def getValues(name: String): JList[String] =
-    query.getValues(name).foldLeft(JLinkedList()) { (values, value) =>
-      values.add(value)
-      values
-    }
+    toList(query.getValues(name))
 
   /** Gets iterator to parameters. */
   def iterator(): JIterator[AnyRef] =
     asJava(query.toSeq.map(toParam).iterator)
 
-  private def toParam(name: String, value: String): JMap[String, AnyRef] =
-    val param = JHashMap[String, AnyRef]()
+  private[scurry] def toScamperQueryString: ScamperQueryString =
+    query
+
+  private def toParam(name: String, value: String): JMap[String, String] =
+    val param = new JHashMap[String, String]
     param.put("name", name)
     param.put("value", value)
     param
-
-  private[scurry] def toScamperQueryString: ScamperQueryString =
-    query

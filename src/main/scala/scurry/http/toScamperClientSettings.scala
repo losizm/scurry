@@ -16,7 +16,6 @@
 package scurry.http
 
 import java.io.File
-import java.lang.{ Boolean as JBoolean, Integer as JInteger, Short as JShort }
 import java.nio.file.Path
 import javax.net.ssl.TrustManager
 
@@ -31,8 +30,8 @@ private object toScamperClientSettings extends Converter:
     toInt(map, "bufferSize").foreach(settings.bufferSize)
     toInt(map, "continueTimeout").foreach(settings.continueTimeout)
     toInt(map, "readTimeout").foreach(settings.readTimeout)
-    toBoolean(map, "keepAlive").foreach(settings.keepAlive)
-    toBoolean(map, "storeCookies").foreach(value => if value then settings.cookies())
+    toBoolean(map, "keepAliveEnabled").foreach(settings.keepAlive)
+    toBoolean(map, "cookieStoreEnabled").foreach(value => if value then settings.cookies())
     settings.accept(toSeq(map, "accept", stringToMediaRange))
     settings.acceptEncoding(toSeq(map, "acceptEncoding", stringToContentCodingRange))
     setResolveTo(map, settings)
@@ -55,11 +54,11 @@ private object toScamperClientSettings extends Converter:
   private def toSeq[Out](map: JMap[String, AnyRef], name: String, converter: String => Out): Seq[Out] =
     val list = ListBuffer[Out]()
     Option(map.get(name)).map {
-      case value: String    => list += convert(name, value, converter)
-      case values: JList[?] =>
+      case value: CharSequence => list += convert(name, value.toString, converter)
+      case values: JList[?]    =>
         values.forEach {
-          case value: String => list += convert(name, value, converter)
-          case _             => bad(name)
+          case value: CharSequence => list += convert(name, value.toString, converter)
+          case _                   => bad(name)
         }
       case _ => bad(name)
     }
@@ -71,9 +70,9 @@ private object toScamperClientSettings extends Converter:
         try
           (value.get("host"), value.get("port"), value.get("secure")) match
             case (null, null, null)                               => // Ignore
-            case (host: String, null,           secure: JBoolean) => settings.resolveTo(host, None, secure)
-            case (host: String, port: JShort,   secure: JBoolean) => settings.resolveTo(host, port.intValue, secure)
-            case (host: String, port: JInteger, secure: JBoolean) => settings.resolveTo(host, port, secure)
+            case (host: CharSequence, null,           secure: JBoolean) => settings.resolveTo(host.toString, None, secure)
+            case (host: CharSequence, port: JShort,   secure: JBoolean) => settings.resolveTo(host.toString, port.intValue, secure)
+            case (host: CharSequence, port: JInteger, secure: JBoolean) => settings.resolveTo(host.toString, port, secure)
         catch case cause: Exception => bad("resolveTo", cause)
       case _ => bad("resolveTo")
     }
@@ -85,9 +84,9 @@ private object toScamperClientSettings extends Converter:
         try
           (value.get("truststore"), value.get("type"), value.get("password")) match
             case (null, null, null)                                   => // Ignore
-            case (truststore: String, kind: String, password: String) => settings.trust(File(truststore), kind, Option(password))
-            case (truststore: File,   kind: String, password: String) => settings.trust(truststore, kind, Option(password))
-            case (truststore: Path,   kind: String, password: String) => settings.trust(truststore.toFile, kind, Option(password))
+            case (truststore: CharSequence, kind: CharSequence, password: CharSequence) => settings.trust(File(truststore.toString), kind.toString, Option(password.toString))
+            case (truststore: File,         kind: CharSequence, password: CharSequence) => settings.trust(truststore, kind.toString, Option(password.toString))
+            case (truststore: Path,         kind: CharSequence, password: CharSequence) => settings.trust(truststore.toFile, kind.toString, Option(password.toString))
         catch case cause: Exception => bad("trust", cause)
       case _ => bad("trust")
     }

@@ -1,0 +1,18 @@
+<configuration>
+  <variable
+    scope="CONTEXT"
+    name="PATTERN"
+    value="[%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}][%level] %logger - %message%n%xException"/>
+
+  <timestamp key="timestamp" datePattern="yyyyMMdd'T'HHmmss"/>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>

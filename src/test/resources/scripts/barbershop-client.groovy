@@ -7,7 +7,7 @@ import scurry.http.Multipart
 
 
 def checkResponse(res) {
-  if (!res.isSuccessful) {
+  if (!res.successful) {
     res.body.drain(16 * KB)
     throw Exception("${res.statusCode} ${res.reasonPhrase}")
   }
@@ -33,7 +33,7 @@ def createComment(httpClient, text, ... attachments) {
     checkResponse(res)
 
     def comment = json.parse(res.body.toInputStream(16 * 1024))
-    println "[${comment.time}] ${comment.text}, attachments=${comment.attachments}"
+    log.info "comment: time=${comment.time}, text=${comment.text}, attachments=${comment.attachments}"
 
     if (comment.text != text)
       throw Exception("Unexpected comment: ${comment.text}")
@@ -52,7 +52,7 @@ def createComment(httpClient, text, ... attachments) {
     checkResponse(res)
 
     def comment = json.parse(res.body.toInputStream(16 * 1024))
-    println "[${comment.time}] ${comment.text}, attachments=${comment.attachments}"
+    log.info "comment: time=${comment.time}, text=${comment.text}, attachments=${comment.attachments}"
 
     if (comment.text != updateText)
       throw Exception("Unexpected comment: ${comment.text}")
@@ -78,8 +78,8 @@ def httpClient = new HttpClient(
   continueTimeout: 500,
   accept: ['application/json; q=0.8', '*/*; q=0.2'],
   acceptEncoding: ['deflate', 'gzip'],
-  keepAlive: false,
-  storeCookies: false,
+  keepAliveEnabled: false,
+  cookieStoreEnabled: false,
   resolveTo: [host: 'localhost', port: 20080, secure: false]
 )
 

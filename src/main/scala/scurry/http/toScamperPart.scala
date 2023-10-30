@@ -24,27 +24,27 @@ import scamper.http.types.{ DispositionType, MediaType }
 private object toScamperPart extends Converter:
   def apply(map: JMap[String, AnyRef]): ScamperPart =
     val name = Option(map.get("name")).map {
-      case value: String => value
-      case _             => bad("part name")
+      case value: CharSequence => value.toString
+      case _                   => bad("part name")
     }.getOrElse(throw IllegalArgumentException("Missing part name"))
 
     val fileName = Option(map.get("fileName")).map {
-      case value: String => value
-      case _             => bad("part fileName")
+      case value: CharSequence => value.toString
+      case _                   => bad("part fileName")
     }
 
     val contentType = Option(map.get("contentType")).map {
-      case value: String => convert("part contentType", value, MediaType(_))
-      case _             => bad("part contentType")
+      case value: CharSequence => convert("part contentType", value.toString, MediaType(_))
+      case _                   => bad("part contentType")
     }
 
     map.get("content") match
-      case null               => throw IllegalArgumentException("Missing part content")
-      case value: String      => toPart(name, value, fileName, contentType)
-      case value: Array[Byte] => toPart(name, value, fileName, contentType)
-      case value: File        => toPart(name, value, fileName, contentType)
-      case value: Path        => toPart(name, value.toFile, fileName, contentType)
-      case _                  => bad("part content")
+      case null                => throw IllegalArgumentException("Missing part content")
+      case value: CharSequence => toPart(name, value.toString, fileName, contentType)
+      case value: Array[Byte]  => toPart(name, value, fileName, contentType)
+      case value: File         => toPart(name, value, fileName, contentType)
+      case value: Path         => toPart(name, value.toFile, fileName, contentType)
+      case _                   => bad("part content")
 
   private def toPart(name: String, content: String, fileName: Option[String], contentType: Option[MediaType]): ScamperPart =
     ScamperPart(

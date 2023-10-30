@@ -16,12 +16,11 @@
 package scurry.http
 
 import java.io.File
-import java.util.{ Iterator as JIterator, LinkedList as JLinkedList }
 
 import scala.collection.mutable.ListBuffer
 import scala.jdk.javaapi.CollectionConverters.asJava
 
-import scamper.http.multipart.{ Multipart as ScamperMultipart, Part as ScamperPart }
+import scamper.http.multipart.Part as ScamperPart
 
 /** Encapsulates multipart message body. */
 class Multipart private[scurry] (mulitpart: ScamperMultipart):
@@ -30,7 +29,7 @@ class Multipart private[scurry] (mulitpart: ScamperMultipart):
    *
    * @note If `parts` is nonempty, then multipart is closed.
    */
-  def this(parts: Array[JMap[String, AnyRef]]) =
+  def this(parts: Array[AnyRef]) =
     this(null : ScamperMultipart)
     if parts.nonEmpty then
       addParts(parts*)
@@ -45,6 +44,7 @@ class Multipart private[scurry] (mulitpart: ScamperMultipart):
     def getBytes(): Array[Byte] = part.getBytes()
     def getFile(): File = part.getFile()
     override def toString(): String = part.toString()
+    private[Multipart] def toScamperPart: ScamperPart = part
 
   private var multipart: ScamperMultipart = null
   private val queue = ListBuffer[ScamperPart]()
@@ -70,10 +70,18 @@ class Multipart private[scurry] (mulitpart: ScamperMultipart):
    *
    * @throws IllegalStateException if multipart is closed
    */
-  def addPart(part: JMap[String, AnyRef]): this.type = synchronized {
+  def addPart(part: AnyRef): this.type = synchronized {
     if multipart != null then
       throw IllegalStateException("multipart is closed")
-    queue += toScamperPart(part)
+    part match
+      case null              => throw NullPointerException("part")
+      case part: ScamperPart => queue += part
+      case part: Part        => queue += part.toScamperPart
+      case part: JMap[?, ?]  => queue += toScamperPart(asMap[String, AnyRef](part))
+      case _                 => 
+        println(part)
+        println(part.getClass)
+        throw IllegalArgumentException("Invalid part")
     this
   }
 
@@ -83,10 +91,8 @@ class Multipart private[scurry] (mulitpart: ScamperMultipart):
    * @throws IllegalStateException if multipart is closed
    */
   @annotation.varargs
-  def addParts(parts: JMap[String, AnyRef]*): this.type = synchronized {
-    if multipart != null then
-      throw IllegalStateException("multipart is closed")
-    parts.foreach { part => queue += toScamperPart(part) }
+  def addParts(parts: AnyRef*): this.type = synchronized {
+    parts.foreach(addPart)
     this
   }
 
@@ -110,11 +116,7 @@ class Multipart private[scurry] (mulitpart: ScamperMultipart):
    * @throws IllegalStateException if multipart is not closed
    */
   def getParts(name: String): JList[AnyRef] =
-    toScamperMultipart.getParts(name)
-      .foldLeft(JLinkedList()) { (list, part) =>
-        list.add(Part(part))
-        list
-      }
+    toList(toScamperMultipart.getParts(name), Part(_))
 
   /** Gets iterator to parameters. */
   def iterator(): JIterator[AnyRef] =

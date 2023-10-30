@@ -15,16 +15,61 @@
  */
 package scurry.http
 
-/** Defines type alias to `java.util.Map`. */
+import java.util.LinkedList as JLinkedList
+
+import scala.collection.mutable.ListBuffer
+
+/**
+ * Defines type alias to `scamper.http.BodyWriter`.
+ *
+ * A body writer has the following functional interface:
+ *
+ * {{{
+ *  trait BodyWriter:
+ *    def write(out: OutputStream): Unit
+ * }}}
+ */
+type BodyWriter = scamper.http.BodyWriter
+
+private type JBoolean = java.lang.Boolean
+private type JShort = java.lang.Short
+private type JInteger = java.lang.Integer
+private type JLong = java.lang.Long
+
+private type JIterator[T] = java.util.Iterator[T]
+private type JList[T] = java.util.List[T]
 private type JMap[K, V] = java.util.Map[K, V]
 
-/** Defines type alias to `java.util.List`. */
-private type JList[T] = java.util.List[T]
+private type ScamperHttpMessage = scamper.http.HttpMessage
+private type ScamperHttpRequest = scamper.http.HttpRequest
+private type ScamperHttpResponse = scamper.http.HttpResponse
+private type ScamperQueryString = scamper.http.QueryString
+private type ScamperMultipart = scamper.http.multipart.Multipart
 
-/** Casts map type parameters. */
-private def toMap[K, V](map: JMap[?, ?]): JMap[K, V] =
+private val ScamperHttpRequest = scamper.http.HttpRequest
+private val ScamperHttpResponse = scamper.http.HttpResponse
+private val ScamperQueryString = scamper.http.QueryString
+private val ScamperMultipart = scamper.http.multipart.Multipart
+
+private def toSeq[T](list: JList[T]): Seq[T] =
+  val buffer = new ListBuffer[T]
+  list.forEach(buffer.+=)
+  buffer.toSeq
+
+private def asMap[K, V](map: JMap[?, ?]): JMap[K, V] =
   map.asInstanceOf[JMap[K, V]]
 
-/** Casts list type parameters. */
-private def toList[T](list: JList[?]): JList[T] =
+private def asList[T](list: JList[?]): JList[T] =
   list.asInstanceOf[JList[T]]
+
+private def toList[T](list: IterableOnce[T]): JList[T] =
+  list.iterator.foldLeft(new JLinkedList[T]) { (jlist, item) =>
+    jlist.add(item)
+    jlist
+  }
+
+private def toList[In, Out](list: IterableOnce[In], f: In => Out): JList[Out] =
+  list.iterator.foldLeft(new JLinkedList[Out]) { (jlist, item) =>
+    jlist.add(f(item))
+    jlist
+  }

@@ -17,14 +17,14 @@ package scurry.http
 
 import java.lang.{ Integer as JInteger, Long as JLong }
 import java.time.Instant
-import java.util.{ Collections, Date, Iterator as JIterator, LinkedList as JLinkedList }
+import java.util.{ Collections, Date }
 
 import scala.jdk.javaapi.CollectionConverters.asJava
 
-import scamper.http.*
+import scamper.http.{ Header as ScamperHeader, * }
 
 /** Encapsulates HTTP headers. */
-class Headers private[scurry] (headers: Seq[Header]):
+class Headers private[scurry] (headers: Seq[ScamperHeader]):
   /**
    * Creates headers from supplied fields.
    *
@@ -70,7 +70,7 @@ class Headers private[scurry] (headers: Seq[Header]):
    */
   def getInstant(name: String): Instant =
     headers.getHeader(name)
-      .map(_.dateValue)
+      .map(_.instantValue)
       .getOrElse(null)
 
   /**
@@ -80,7 +80,7 @@ class Headers private[scurry] (headers: Seq[Header]):
    */
   def getDate(name: String): Date =
     headers.getHeader(name)
-      .map(_.dateValue)
+      .map(_.instantValue)
       .map(Date.from)
       .getOrElse(null)
 
@@ -90,14 +90,11 @@ class Headers private[scurry] (headers: Seq[Header]):
    * @param name header name
    */
   def getValues(name: String): JList[String] =
-    headers.getHeaderValues(name).foldLeft(JLinkedList()) { (values, value) =>
-      values.add(value)
-      values
-    }
+    toList(headers.getHeaderValues(name))
 
   /** Gets iterator to headers. */
   def iterator(): JIterator[AnyRef] =
     asJava(headers.iterator)
 
-  private[scurry] def toScamperHeaders: Seq[Header] =
+  private[scurry] def toScamperHeaders: Seq[ScamperHeader] =
     headers

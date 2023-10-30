@@ -16,7 +16,7 @@
 package scurry.http
 
 import java.lang.{ Boolean as JBoolean, Long as JLong }
-import java.util.{ Iterator as JIterator, LinkedHashMap as JHashMap }
+import java.util.LinkedHashMap as JLinkedHashMap
 
 import scala.jdk.javaapi.CollectionConverters.asJava
 
@@ -25,7 +25,7 @@ import scamper.http.cookies.{ Cookie as ScamperCookie, SetCookie }
 /** Encapsulates HTTP cookies. */
 class Cookies private[scurry] (cookies: Seq[ScamperCookie]):
   /** Creates cookies from supplied cookies. */
-  def this(cookies: Array[JMap[String, AnyRef]]) =
+  def this(cookies: Array[AnyRef]) =
     this(toScamperCookies(cookies.toSeq))
 
   /**
@@ -45,12 +45,10 @@ class Cookies private[scurry] (cookies: Seq[ScamperCookie]):
     asJava(cookies.map(toCookie).iterator)
 
   private[scurry] def toScamperCookies: Seq[ScamperCookie] =
-    if cookies == null then
-      throw IllegalStateException("cookies are not closed")
     cookies
 
   private def toCookie(c: ScamperCookie): JMap[String, AnyRef] =
-    val cookie = JHashMap[String, AnyRef]()
+    val cookie = JLinkedHashMap[String, AnyRef]()
     cookie.put("name", c.name)
     cookie.put("value", c.value)
     c match

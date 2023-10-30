@@ -15,7 +15,6 @@
  */
 package scurry.http
 
-import java.lang.{ Integer as JInteger, Long as JLong, Short as JShort }
 import java.time.Instant
 import java.util.Date
 
@@ -29,20 +28,20 @@ private object toScamperHeaders:
 
     try
       map.forEach {
-        case (name, value: String)    => headers += Header(name, value)
-        case (name, value: JShort)    => headers += Header(name, value.intValue)
-        case (name, value: JInteger)  => headers += Header(name, value)
-        case (name, value: JLong)     => headers += Header(name, value)
-        case (name, value: Instant)   => headers += Header(name, value)
-        case (name, value: Date)      => headers += Header(name, value.toInstant)
-        case (name, values: JList[?]) => values.forEach {
-          case value: String   => headers += Header(name, value)
-          case value: JShort   => headers += Header(name, value.intValue)
-          case value: JInteger => headers += Header(name, value)
-          case value: JLong    => headers += Header(name, value)
-          case value: Instant  => headers += Header(name, value)
-          case value: Date     => headers += Header(name, value.toInstant)
-          case _               => throw IllegalArgumentException(s"Invalid header: $name")
+        case (name, value: CharSequence) => headers += Header(name, value.toString)
+        case (name, value: JShort)       => headers += Header(name, value.intValue)
+        case (name, value: JInteger)     => headers += Header(name, value)
+        case (name, value: JLong)        => headers += Header(name, value)
+        case (name, value: Instant)      => headers += Header(name, value)
+        case (name, value: Date)         => headers += Header(name, value.toInstant)
+        case (name, value: JList[?])     => value.forEach {
+          case value: CharSequence   => headers += Header(name, value.toString)
+          case value: JShort         => headers += Header(name, value.intValue)
+          case value: JInteger       => headers += Header(name, value)
+          case value: JLong          => headers += Header(name, value)
+          case value: Instant        => headers += Header(name, value)
+          case value: Date           => headers += Header(name, value.toInstant)
+          case _                     => throw IllegalArgumentException(s"Invalid header: $name")
         }
         case (name, _) => throw IllegalArgumentException(s"Invalid header: $name")
       }

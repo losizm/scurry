@@ -15,11 +15,7 @@
  */
 package scurry.http
 
-import java.lang.{ Integer as JInteger, Long as JLong, Short as JShort }
-
 import scala.collection.mutable.ListBuffer
-
-import scamper.http.QueryString as ScamperQueryString
 
 private object toScamperQueryString extends Converter:
   def apply(map: JMap[String, AnyRef]): ScamperQueryString =
@@ -27,16 +23,16 @@ private object toScamperQueryString extends Converter:
 
     try
       map.forEach {
-        case (name, value: String)    => params += name -> value
-        case (name, value: JShort)    => params += name -> value.toString
-        case (name, value: JInteger)  => params += name -> value.toString
-        case (name, value: JLong)     => params += name -> value.toString
-        case (name, values: JList[?]) => values.forEach {
-          case value: String   => params += name -> value
-          case value: JShort   => params += name -> value.toString
-          case value: JInteger => params += name -> value.toString
-          case value: JLong    => params += name -> value.toString
-          case _               => bad(s"Invalid query string parameter: $name")
+        case (name, value: CharSequence) => params += name -> value.toString
+        case (name, value: JShort)       => params += name -> value.toString
+        case (name, value: JInteger)     => params += name -> value.toString
+        case (name, value: JLong)        => params += name -> value.toString
+        case (name, values: JList[?])    => values.forEach {
+          case value: CharSequence => params += name -> value.toString
+          case value: JShort       => params += name -> value.toString
+          case value: JInteger     => params += name -> value.toString
+          case value: JLong        => params += name -> value.toString
+          case _                   => bad(s"Invalid query string parameter: $name")
         }
         case (name, _) => bad(s"Invalid query string parameter: $name")
       }
