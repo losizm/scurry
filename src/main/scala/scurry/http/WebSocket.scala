@@ -168,7 +168,7 @@ class WebSocket private[scurry] (session: WebSocketSession):
       case message: Array[Byte] => session.send(message)
       case message: Reader      => session.send(message)
       case message: InputStream => session.send(message)
-      case _                    => throw IllegalArgumentException(s"Invalid message type: ${message.getClass}")
+      case message              => throw IllegalArgumentException(s"Invalid message type: ${message.getClass}")
 
   /**
    * Sends message asynchronously.
@@ -182,7 +182,7 @@ class WebSocket private[scurry] (session: WebSocketSession):
       case message: Array[Byte] => asJava(session.sendAsync(message)).toCompletableFuture
       case message: Reader      => asJava(session.sendAsync(message)).toCompletableFuture
       case message: InputStream => asJava(session.sendAsync(message)).toCompletableFuture
-      case _                    => throw IllegalArgumentException(s"Invalid message type: ${message.getClass}")
+      case message              => throw IllegalArgumentException(s"Invalid message type: ${message.getClass}")
 
   /**
    * Sends ping message.

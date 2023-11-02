@@ -20,13 +20,21 @@ import java.util.LinkedHashMap as JLinkedHashMap
 
 import scala.jdk.javaapi.CollectionConverters.asJava
 
-import scamper.http.cookies.{ Cookie as ScamperCookie, SetCookie }
+import scamper.http.cookies.SetCookie
 
-/** Encapsulates HTTP cookies. */
-class Cookies private[scurry] (cookies: Seq[ScamperCookie]):
+/** Provides access to HTTP cookies. */
+class Cookies private[scurry] (cookies: Seq[RealCookie]):
   /** Creates cookies from supplied cookies. */
   def this(cookies: Array[AnyRef]) =
-    this(toScamperCookies(cookies.toSeq))
+    this(toRealCookies(cookies.toSeq))
+
+  /** Tests for empty. */
+  def isEmpty(): Boolean =
+    cookies.isEmpty
+
+  /** Gets cookie count. */
+  def size(): Int =
+    cookies.size
 
   /**
    * Gets cookie with given name.
@@ -36,7 +44,7 @@ class Cookies private[scurry] (cookies: Seq[ScamperCookie]):
    * @throws IllegalStateException if cookies are not closed
    */
   def get(name: String): AnyRef =
-    toScamperCookies.find(_.name == name)
+    realCookies.find(_.name == name)
       .map(toCookie)
       .getOrElse(null)
 
@@ -44,10 +52,10 @@ class Cookies private[scurry] (cookies: Seq[ScamperCookie]):
   def iterator(): JIterator[AnyRef] =
     asJava(cookies.map(toCookie).iterator)
 
-  private[scurry] def toScamperCookies: Seq[ScamperCookie] =
+  private[scurry] def realCookies: Seq[RealCookie] =
     cookies
 
-  private def toCookie(c: ScamperCookie): JMap[String, AnyRef] =
+  private def toCookie(c: RealCookie): JMap[String, AnyRef] =
     val cookie = JLinkedHashMap[String, AnyRef]()
     cookie.put("name", c.name)
     cookie.put("value", c.value)

@@ -16,7 +16,7 @@
 package scurry.http
 
 import scamper.http.RequestMethod
-import scamper.http.client.ClientSettings as ScamperClientSettings
+import scamper.http.client.{ ClientSettings as RealClientSettings, HttpClient as RealHttpClient, * }
 import scamper.http.cookies.RequestCookies
 import RequestMethod.Registry.*
 
@@ -27,7 +27,7 @@ import settings.*
  *
  * @define asterisk *
  */
-class HttpClient private[scurry] (settings: ScamperClientSettings):
+class HttpClient private[scurry] (settings: RealClientSettings):
   /**
    * Creates HTTP client using supplied settings.
    *
@@ -35,88 +35,82 @@ class HttpClient private[scurry] (settings: ScamperClientSettings):
    *
    * The following provides example settings:
    *
-   * ```
-   * [
-   *   accept: '$asterisk/$asterisk',
-   *   acceptEncodings: ['applications/json', '$asterisk/$asterisk; q=0.1'],
-   *   bufferSize: 8192,
-   *   readTimeout: 15000,
-   *   continueTimeout: 1000,
-   *   keepAliveEnabled: false,
-   *   cookieStoreEnabled: true,
-   *   // Used to resolve non-absolute URLs
-   *   resolveTo: [
-   *     host: 'api.example.com',
-   *     port: 443,
-   *     secure: true
-   *   ],
-   *   // Used to verify SSL/TLS certificates
-   *   trust: [
-   *     truststore: '/path/to/example.jks',
-   *     type: 'jks',
-   *     password: 'letmein'
-   *   ]
-   * ]
-   * ```
+   * {{{
+   *  [
+   *    accept: "$asterisk/$asterisk",
+   *    acceptEncodings: ["applications/json", "$asterisk/$asterisk; q=0.1"],
+   *    bufferSize: 8192,
+   *    readTimeout: 15000,
+   *    continueTimeout: 1000,
+   *    keepAliveEnabled: false,
+   *    cookieStoreEnabled: true,
+   *    // Used to resolve non-absolute request targets
+   *    resolveTo: [
+   *      host: "api.example.com",
+   *      port: 443,
+   *      secure: true
+   *    ],
+   *    // Used to verify SSL/TLS certificates
+   *    trust: [
+   *      truststore: "/path/to/example.jks",
+   *      type: "jks",
+   *      password: "letmein"
+   *    ]
+   *  ]
+   * }}}
    *
    * @param settings client settings
    */
-  def this(settings: JMap[String, AnyRef]) = this(toScamperClientSettings(settings))
+  def this(settings: JMap[String, AnyRef]) = this(toRealClientSettings(settings))
 
   /** Creates HTTP client using default settings. */
-  def this() = this(ScamperClientSettings())
+  def this() = this(RealClientSettings())
 
-  private lazy val httpClient = settings.toHttpClient()
-  private lazy val currentSettings = ActiveClientSettings(httpClient)
+  private var httpClient = settings.toHttpClient()
+  private var currentSettings = ActiveClientSettings(httpClient)
+  private val cookies = PersistentCookies(httpClient.cookies)
+
 
   /** Gets client settings. */
   def getSettings(): ClientSettings =
     currentSettings
 
+  /** Gets persistent cookies. */
+  def getCookies(): PersistentCookies =
+    cookies
+
+  /**
+   * Adds request filter.
+   *
+   * @param filter request filter
+   *
+   * @return this
+   */
+  def outgoing(filter: HttpRequest => AnyRef): this.type = synchronized {
+    settings.outgoing(toRequestFilter(filter))
+    httpClient = settings.cookies(cookies.realCookieStore).toHttpClient()
+    currentSettings = ActiveClientSettings(httpClient)
+    this
+  }
+
+  /**
+   * Adds response filter.
+   *
+   * @param filter response filter
+   *
+   * @return this
+   */
+  def incoming(filter: HttpResponse => AnyRef): this.type = synchronized {
+    settings.incoming(toResponseFilter(filter))
+    httpClient = settings.cookies(cookies.realCookieStore).toHttpClient()
+    currentSettings = ActiveClientSettings(httpClient)
+    this
+  }
+
   /**
    * Sends request.
    *
-   * ### HTTP Request
-   *
-   * The following provides example HTTP request:
-   *
-   * ```
-   * [
-   *   method: 'POST',
-   *   url: 'https://api.example.com/messages',
-   *   headers: [
-   *     'Content-Type': 'application/json',
-   *     'Authorization': 'Bearer 94c2f320-7120-4338-8e40-42bc2581dd05'
-   *   ],
-   *   // Supply body as Array[Byte], String, File, Path, InputStream, Reader,
-   *   // QueryString, Multipart, or BodyWriter
-   *   body: '''{ "to": ["Peter", "Mary"], "text": "Hello, friends!"] }'''
-   * ]
-   * ```
-   *
-   * ### HTTP Response
-   *
-   * The following provides example HTTP response:
-   *
-   * ```
-   * [
-   *   httpVersion: 'HTTP/1.1',
-   *   statusCode: 200,
-   *   reasonPhrase: 'OK',
-   *   headers: [
-   *     'Content-Type': 'application/json',
-   *     'Content-Length': 45,
-   *     'Date': 'Mon, 23 Oct 2023 16:11:12 GMT',
-   *     'Connection': 'close'
-   *   ],
-   *   body: ... // See scurry.http.Body
-   * ]
-   * ```
-   *
-   * @param req outgoing request
-   * @param handler response handler
-   *
-   * @see [[Body]], [[BodyWriter]], [[Multipart]], [[QueryString]]
+   * @see [[HttpRequest]]
    */
   def send[T](req: AnyRef, handler: HttpResponse => T): T =
     sendRequest(req, None, handler)
@@ -181,11 +175,26 @@ class HttpClient private[scurry] (settings: ScamperClientSettings):
     val real = toRealRequest(req, method)
     httpClient.send(real) { res => handler(HttpResponse(res)) }
 
-  private def toRealRequest(req: AnyRef, method: Option[RequestMethod]): ScamperHttpRequest =
+  private def toRealRequest(req: AnyRef, method: Option[RequestMethod]): RealHttpRequest =
     val real = req match
-      case req: ScamperHttpRequest => req
-      case req: HttpRequest        => req.scamperHttpMessage
-      case req: JMap[?, ?]         => toScamperHttpRequest(asMap[String, AnyRef](req))
-      case _                       => throw IllegalArgumentException("Invalid request")
-
+      case req: RealHttpRequest => req
+      case req: HttpRequest     => req.realHttpMessage
+      case req: JMap[?, ?]      => toRealHttpRequest(asJMap(req))
+      case value                => throw IllegalArgumentException(s"Invalid request (${value.getClass})")
     method.map(real.setMethod).getOrElse(real)
+
+  private def toRequestFilter(filter: HttpRequest => AnyRef): RequestFilter =
+    req => filter(ClientSideHttpRequest(req)) match
+      case null                 => throw NullPointerException("Request from request filter")
+      case msg: RealHttpRequest => msg
+      case msg: HttpRequest     => msg.realHttpMessage
+      case msg: JMap[?, ?]      => toRealHttpRequest(asJMap(msg))
+      case msg                  => throw IllegalArgumentException(s"Request from request filter (${msg.getClass})")
+
+  private def toResponseFilter(filter: HttpResponse => AnyRef): ResponseFilter =
+    res => filter(ClientSideHttpResponse(res)) match
+      case null                  => throw NullPointerException("Response from response filter")
+      case msg: RealHttpResponse => msg
+      case msg: HttpResponse     => msg.realHttpMessage
+      case msg: JMap[?, ?]       => toRealHttpResponse(asJMap(msg))
+      case msg                   => throw IllegalArgumentException(s"Response from response filter (${msg.getClass})")

@@ -24,32 +24,19 @@ import scala.collection.mutable.ListBuffer
 import scamper.http.types.{ stringToMediaRange, stringToContentCodingRange }
 import scamper.http.client.ClientSettings
 
-private object toScamperClientSettings extends Converter:
+private object toRealClientSettings extends Converter:
   def apply(map: JMap[String, AnyRef]): ClientSettings =
     val settings = ClientSettings()
-    toInt(map, "bufferSize").foreach(settings.bufferSize)
-    toInt(map, "continueTimeout").foreach(settings.continueTimeout)
-    toInt(map, "readTimeout").foreach(settings.readTimeout)
-    toBoolean(map, "keepAliveEnabled").foreach(settings.keepAlive)
-    toBoolean(map, "cookieStoreEnabled").foreach(value => if value then settings.cookies())
+    map.optionInt("bufferSize").foreach(settings.bufferSize)
+    map.optionInt("continueTimeout").foreach(settings.continueTimeout)
+    map.optionInt("readTimeout").foreach(settings.readTimeout)
+    map.optionBoolean("keepAliveEnabled").foreach(settings.keepAlive)
+    map.optionBoolean("cookieStoreEnabled").foreach(if _ then settings.cookies())
     settings.accept(toSeq(map, "accept", stringToMediaRange))
     settings.acceptEncoding(toSeq(map, "acceptEncoding", stringToContentCodingRange))
     setResolveTo(map, settings)
     setTrust(map, settings)
     settings
-
-  private def toInt(map: JMap[String, AnyRef], name: String): Option[Int] =
-    Option(map.get(name)).map {
-      case value: JShort   => value.intValue
-      case value: JInteger => value
-      case _               => bad(name)
-    }
-
-  private def toBoolean(map: JMap[String, AnyRef], name: String): Option[Boolean] =
-    Option(map.get(name)).map {
-      case value: JBoolean => value
-      case _               => bad(name)
-    }
 
   private def toSeq[Out](map: JMap[String, AnyRef], name: String, converter: String => Out): Seq[Out] =
     val list = ListBuffer[Out]()

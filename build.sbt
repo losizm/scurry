@@ -1,6 +1,6 @@
 organization  := "com.github.losizm"
 name          := "scurry"
-version       := "0.3.0"
+version       := "0.4.0"
 versionScheme := Some("early-semver")
 description   := "The Groovy-esque wrapper for Scamper"
 homepage      := Some(url("https://github.com/losizm/scurry"))

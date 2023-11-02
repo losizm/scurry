@@ -24,11 +24,11 @@ import java.util.concurrent.atomic.AtomicReference
 import scala.collection.mutable.ListBuffer
 
 import scamper.http.RequestMethod
-import scamper.http.server.{ HttpServer as ScamperHttpServer, Router as ScamperRouter, * }
+import scamper.http.server.{ HttpServer as RealHttpServer, Router as RealRouter, * }
 import scamper.http.websocket.WebSocketApplication
 
 /** Defines router. */
-abstract class Router private[scurry] (router: ScamperRouter):
+abstract class Router private[scurry] (router: RealRouter):
   import Router.*
 
   /** Gets mount path. */
@@ -143,7 +143,7 @@ abstract class Router private[scurry] (router: ScamperRouter):
       case source: File   => router.files(path, source, defaults*)
       case source: Path   => router.files(path, source.toFile, defaults*)
       case source: String => router.files(path, File(source), defaults*)
-      case _              => throw IllegalArgumentException("source")
+      case value          => throw IllegalArgumentException(s"File required for source (${value.getClass})")
     this
 
   /**
@@ -192,17 +192,33 @@ abstract class Router private[scurry] (router: ScamperRouter):
     this
 
 private object Router:
-  class RouterWrapper(router: ScamperRouter) extends Router(router)
+  private class RouterWrapper(router: RealRouter) extends Router(router)
 
   def toRequestMethods(methods: AnyRef): Seq[RequestMethod] =
     methods match
-      case null                   => Nil
-      case method: String         => Seq(RequestMethod(method))
-      case method: RequestMethod  => Seq(method)
-      case methods: Array[?]      => methods.map(_.asInstanceOf[AnyRef]).flatMap(toRequestMethods).toSeq
-      case methods: Seq[?]        => methods.map(_.asInstanceOf[AnyRef]).flatMap(toRequestMethods).toSeq
-      case methods: JList[?]      => asScala(methods).flatMap(toRequestMethods).toSeq
-      case _                      => throw IllegalArgumentException("Invalid method")
+      case null                  => Nil
+      case method: String        => Seq(RequestMethod(method))
+      case method: RequestMethod => Seq(method)
+      case methods: Array[?]     => methods.map(_.asInstanceOf[AnyRef]).flatMap(toRequestMethods).toSeq
+      case methods: Seq[?]       => methods.map(_.asInstanceOf[AnyRef]).flatMap(toRequestMethods).toSeq
+      case methods: JList[?]     => toSeq(asJList(methods)).flatMap(toRequestMethods).toSeq
+      case method                => throw IllegalArgumentException(s"Invalid method (${method.getClass})")
+
+  def toRequestHandler(handler: HttpRequest => AnyRef): RequestHandler =
+    req => handler(ServerSideHttpRequest(req)) match
+      case null                 => throw NullPointerException("Message from request handler")
+      case msg: RealHttpMessage => msg
+      case msg: HttpMessage     => msg.realHttpMessage
+      case msg: JMap[?, ?]      => toRealHttpMessage(asJMap(msg))
+      case msg                  => throw IllegalArgumentException(s"Message from request handler (${msg.getClass})")
+
+  def toResponseFilter(filter: HttpResponse => AnyRef): ResponseFilter =
+    res => filter(ServerSideHttpResponse(res)) match
+      case null                  => throw NullPointerException("Response from response filter")
+      case msg: RealHttpResponse => msg
+      case msg: HttpResponse     => msg.realHttpMessage
+      case msg: JMap[?, ?]       => toRealHttpResponse(asJMap(msg))
+      case msg                   => throw IllegalArgumentException(s"Response from response filter (${msg.getClass})")
 
   def toWebSocketApplication[T](app: WebSocket => T): WebSocketApplication[T] =
     session => app(WebSocket(session))
@@ -210,29 +226,13 @@ private object Router:
   def toRouterApplication(app: Router => AnyRef): RouterApplication =
     router => app(RouterWrapper(router))
 
-  def toRequestHandler(handler: HttpRequest => AnyRef): RequestHandler =
-    req => handler(ServerSideHttpRequest(req)) match
-      case null                    => throw NullPointerException("message from request handler")
-      case msg: ScamperHttpMessage => msg
-      case msg: HttpMessage        => msg.scamperHttpMessage
-      case msg: JMap[?, ?]         => toScamperHttpMessage(asMap[String, AnyRef](msg))
-      case msg                     => throw IllegalArgumentException("message from request handler")
-
-  def toResponseFilter(filter: HttpResponse => AnyRef): ResponseFilter =
-    res => filter(ServerSideHttpResponse(res)) match
-      case null                     => throw NullPointerException("respoonse from response filter")
-      case msg: ScamperHttpResponse => msg
-      case msg: HttpResponse        => msg.scamperHttpMessage
-      case msg: JMap[?, ?]          => toScamperHttpResponse(asMap[String, AnyRef](msg))
-      case msg                      => throw IllegalArgumentException("respoonse from response filter")
-
   def toErrorHandler(handler: (HttpRequest, Throwable) => AnyRef): ErrorHandler =
     req => { err => handler(ServerSideHttpRequest(req), err) match
-      case null                     => throw NullPointerException("response from error handler")
-      case msg: ScamperHttpResponse => msg
-      case msg: HttpResponse        => msg.scamperHttpMessage
-      case msg: JMap[?, ?]          => toScamperHttpResponse(asMap[String, AnyRef](msg))
-      case msg                      => throw IllegalArgumentException("response from error handler")
+      case null                  => throw NullPointerException("Response from error handler")
+      case msg: RealHttpResponse => msg
+      case msg: HttpResponse     => msg.realHttpMessage
+      case msg: JMap[?, ?]       => toRealHttpResponse(asJMap(msg))
+      case msg                   => throw IllegalArgumentException(s"Response from error handler (${msg.getClass})")
     }
 
   def toLifecyleHook[T](hook: AnyRef => T): LifecycleHook =
@@ -250,8 +250,3 @@ private object Router:
             obj.put("type", "stop")
             obj.put("server", settings.ActiveServerSettings(server))
             hook(obj)
-
-  def asScala(list: JList[?]): Seq[AnyRef] =
-    val buffer = new ListBuffer[AnyRef]()
-    list.forEach(buffer.+=)
-    buffer.toSeq

@@ -17,55 +17,55 @@ package scurry.http
 package request
 
 /** GET request. */
-class Get private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Get private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates GET request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "GET"))
+    this(toRealHttpRequest(req, "GET"))
 
 /** HEAD request. */
-class Head private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Head private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates HEAD request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "HEAD"))
+    this(toRealHttpRequest(req, "HEAD"))
 
 /** POST request. */
-class Post private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Post private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates POST request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "POST"))
+    this(toRealHttpRequest(req, "POST"))
 
 /** PUT request. */
-class Put private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Put private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates PUT request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "PUT"))
+    this(toRealHttpRequest(req, "PUT"))
 
 /** PATCH request. */
-class Patch private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Patch private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates PATCH request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "PATCH"))
+    this(toRealHttpRequest(req, "PATCH"))
 
 /** DELETE request. */
-class Delete private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Delete private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates DELETE request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "DELETE"))
+    this(toRealHttpRequest(req, "DELETE"))
 
 /** OPTIONS request. */
-class Options private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Options private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates OPTIONS request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "OPTIONS"))
+    this(toRealHttpRequest(req, "OPTIONS"))
 
 /** TRACE request. */
-class Trace private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Trace private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates TRACE request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "TRACE"))
+    this(toRealHttpRequest(req, "TRACE"))
 
 /** CONNECT request. */
-class Connect private[scurry] (req: ScamperHttpRequest) extends HttpRequest(req):
+class Connect private[scurry] (req: RealHttpRequest) extends HttpRequest(req):
   /** Creates CONNECT request. */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req, "CONNECT"))
+    this(toRealHttpRequest(req, "CONNECT"))

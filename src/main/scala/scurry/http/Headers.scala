@@ -17,21 +17,29 @@ package scurry.http
 
 import java.lang.{ Integer as JInteger, Long as JLong }
 import java.time.Instant
-import java.util.{ Collections, Date }
+import java.util.Date
 
 import scala.jdk.javaapi.CollectionConverters.asJava
 
-import scamper.http.{ Header as ScamperHeader, * }
+import scamper.http.{ getHeader, getHeaderValueOrElse, getHeaderValues }
 
 /** Encapsulates HTTP headers. */
-class Headers private[scurry] (headers: Seq[ScamperHeader]):
+class Headers private[scurry] (headers: Seq[RealHeader]):
+  /** Tests for empty. */
+  def isEmpty(): Boolean =
+    headers.isEmpty
+
+  /** Gets header count. */
+  def size(): Int =
+    headers.size
+
   /**
    * Creates headers from supplied fields.
    *
    * @param fields header fields
    */
   def this(fields: JMap[String, AnyRef]) =
-    this(toScamperHeaders(fields))
+    this(toRealHeaders(fields))
 
   /**
    * Gets header value.
@@ -90,11 +98,11 @@ class Headers private[scurry] (headers: Seq[ScamperHeader]):
    * @param name header name
    */
   def getValues(name: String): JList[String] =
-    toList(headers.getHeaderValues(name))
+    toJList(headers.getHeaderValues(name))
 
   /** Gets iterator to headers. */
   def iterator(): JIterator[AnyRef] =
     asJava(headers.iterator)
 
-  private[scurry] def toScamperHeaders: Seq[ScamperHeader] =
+  private[scurry] def realHeaders: Seq[RealHeader] =
     headers

@@ -15,16 +15,12 @@
  */
 package scurry.http
 
-import java.io.File
-import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
-
-import scamper.http.server.{ HttpServer as ScamperHttpServer, Router as ScamperRouter, * }
 
 import settings.*
 
 /** Defines HTTP server. */
-class HttpServer private[scurry] (app: ServerApplication, inactiveSettings: InactiveServerSettings) extends Router(app):
+class HttpServer private[scurry] (app: RealServerApplication, inactiveSettings: InactiveServerSettings) extends Router(app):
   /**
    * Creates HTTP server using supplied settings.
    *
@@ -32,34 +28,34 @@ class HttpServer private[scurry] (app: ServerApplication, inactiveSettings: Inac
    *
    * The following provides example settings:
    *
-   * ```
-   * [
-   *   host: 'localhost',
-   *   port: 8443,
-   *   ssl: [
-   *     key: '/private/ssl/server.key',
-   *     certificate: '/private/ssl/server.crt'
-   *   ],
-   *   logger: 'HttpServer', // i.e., logger name
-   *   backlogSize: 50,
-   *   queueSize: 32,
-   *   poolSize: 8,
-   *   bufferSize: 8192,
-   *   readTimeout: 1000,
-   *   headerLimit: 100,
-   *   keepAlive: [
-   *    timeout: 30,
-   *    max: 5
-   *   ]
-   * ]
-   * ```
+   * {{{
+   *  [
+   *    host: "localhost",
+   *    port: 8443,
+   *    ssl: [
+   *      key: "/private/ssl/server.key",
+   *      certificate: "/private/ssl/server.crt"
+   *    ],
+   *    logger: "HttpServer", // i.e., logger name
+   *    backlogSize: 50,
+   *    queueSize: 32,
+   *    poolSize: 8,
+   *    bufferSize: 8192,
+   *    readTimeout: 1000,
+   *    headerLimit: 100,
+   *    keepAlive: [
+   *     timeout: 30,
+   *     max: 5
+   *    ]
+   *  ]
+   * }}}
    *
    * @param settings server settings
    */
   def this(settings: JMap[String, AnyRef]) =
-    this(toScamperServerApplication(settings), InactiveServerSettings(settings))
+    this(toRealServerApplication(settings), InactiveServerSettings(settings))
 
-  private val httpServer = AtomicReference[ScamperHttpServer]()
+  private val httpServer = AtomicReference[RealHttpServer]()
   private val currentSettings = AtomicReference[ServerSettings](inactiveSettings)
 
   /**
@@ -81,7 +77,7 @@ class HttpServer private[scurry] (app: ServerApplication, inactiveSettings: Inac
 
   /** Starts server. */
   def start(): Unit = synchronized {
-    if httpServer.get == null then
+    if httpServer.get == null || httpServer.get.isClosed then
       val server = app.toHttpServer(inactiveSettings.getHost(), inactiveSettings.getPort())
       httpServer.set(server)
       currentSettings.set(ActiveServerSettings(server))

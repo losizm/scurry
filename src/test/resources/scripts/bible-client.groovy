@@ -22,14 +22,24 @@ def httpClient = new HttpClient(
   ]
 )
 
+httpClient.outgoing {
+  it.setHeader("X-Outgoing-Test", Instant.now())
+  it
+}
+
+httpClient.incoming {
+  it.setHeader("X-Incoming-Test", Instant.now())
+  it
+}
+
 def req = [
   method: "GET",
-  url: '/api/findVerses/1/1/1',
+  target: '/api/findVerses/1/1/1',
   query: [
     q: '/it was good'
   ],
   headers: [
-    'User-Agent': 'Gramper/0.1.0',
+    'User-Agent': 'Nunya/1.0.0',
     'Date': Instant.now(),
     'X-Test': [1024, 8192L, 'Hello, world!', Instant.now()]
   ]

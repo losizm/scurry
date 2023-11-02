@@ -15,11 +15,11 @@
 */
 package scurry.http
 
-private object toScamperHttpMessage:
-  def apply(map: JMap[String, AnyRef]): ScamperHttpMessage =
-    if map.containsKey("method") || map.containsKey("url") then
-      toScamperHttpRequest(map)
+private object toRealHttpMessage extends Converter:
+  def apply(map: JMap[String, AnyRef]): RealHttpMessage =
+    if map.containsKey("method") || map.containsKey("target") then
+      toRealHttpRequest(map)
     else if map.containsKey("statusCode") || map.containsKey("reasonPhrase") then
-      toScamperHttpResponse(map)
+      toRealHttpResponse(map)
     else
-      throw IllegalArgumentException("Unknown message type")
+      bad("Unable to identify message type")

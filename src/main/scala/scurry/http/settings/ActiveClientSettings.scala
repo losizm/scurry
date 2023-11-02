@@ -16,12 +16,11 @@
 package scurry.http
 package settings
 
-import scamper.http.client.HttpClient as ScamperHttpClient
 import scamper.http.cookies.CookieStore
 
-private[scurry] class ActiveClientSettings(client: ScamperHttpClient) extends ClientSettings:
-  def getAccept(): JList[String] = toList(client.accept, _.toString)
-  def getAcceptEncoding(): JList[String] = toList(client.acceptEncoding, _.toString)
+private[scurry] class ActiveClientSettings(client: RealHttpClient) extends ClientSettings:
+  def getAccept(): JList[String] = toJList(client.accept, _.toString)
+  def getAcceptEncoding(): JList[String] = toJList(client.acceptEncoding, _.toString)
   def getBufferSize(): Int = client.bufferSize
   def getReadTimeout(): Int = client.readTimeout
   def getContinueTimeout(): Int = client.continueTimeout

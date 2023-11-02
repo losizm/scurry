@@ -27,7 +27,7 @@ def httpClient = new HttpClient(
   ]
 )
 
-def websocket = httpClient.websocket(url: '/messenger') { it ->
+def websocket = httpClient.websocket(target: '/messenger') { it ->
   log.info "[client] id=${it.id}"
   log.info "[client] target=${it.target}"
   log.info "[client] secure=${it.secure}"

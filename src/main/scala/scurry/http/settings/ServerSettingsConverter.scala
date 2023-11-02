@@ -21,58 +21,38 @@ import java.net.InetAddress
 import java.nio.file.Path
 
 private[scurry] trait ServerSettingsConverter extends Converter:
-  def toHost(settings: JMap[String, AnyRef]): InetAddress =
-    settings.get("host") match
-      case null                => InetAddress.getByName("0.0.0.0")
-      case value: CharSequence => InetAddress.getByName(value.toString)
-      case value: InetAddress  => value
-      case _                   => throw IllegalArgumentException("Invalid host")
+  extension (map: JMap[String, AnyRef])
+    def requireHost(): InetAddress =
+      map.get("host") match
+        case null                => InetAddress.getByName("0.0.0.0")
+        case value: CharSequence => InetAddress.getByName(value.toString)
+        case value: InetAddress  => value
+        case value               => bad(s"Invalid host (${value.getClass})")
 
-  def toPort(settings: JMap[String, AnyRef]): Int =
-    settings.get("port") match
-      case null            => 0
-      case value: JShort   => if value < 0 then value + 65536 else value.intValue
-      case value: JInteger => value.intValue
-      case _               => throw IllegalArgumentException("Invalid port")
+    def requirePort(): Int =
+      map.get("port") match
+        case null            => 0
+        case value: JShort   => value.intValue
+        case value: JInteger => value.intValue
+        case value: JLong    => checkInt(value.longValue, s"Port number too large ($value)")
+        case value           => bad(s"Invalid port (${value.getClass})")
 
-  def toInt(map: JMap[String, AnyRef], name: String): Int =
-    toOptionInt(map, name).getOrElse(bad(s"Missing $name"))
+    def optionKeepAlive(): Option[(Int, Int)] =
+      Option(map.get("keepAlive")).map {
+        case value: JMap[?, ?] =>
+          try
+            val keepAlive = asJMap[String, AnyRef](value)
+            (keepAlive.requireInt("timeout"), keepAlive.requireInt("max"))
+          catch case cause: Exception => bad("keepAlive", cause)
+        case _ => bad("keepAlive")
+      }
 
-  def toFile(map: JMap[String, AnyRef], name: String): File =
-    map.get(name) match
-      case null                => bad(s"Missing $name")
-      case value: File         => value
-      case value: Path         => value.toFile
-      case value: CharSequence => File(value.toString)
-      case _                   => bad(name)
-
-  def toOptionString(map: JMap[String, AnyRef], name: String): Option[String] =
-    Option(map.get(name)).map {
-      case value: CharSequence => value.toString
-      case _                   => bad(name)
-    }
-
-  def toOptionInt(map: JMap[String, AnyRef], name: String): Option[Int] =
-    Option(map.get(name)).map {
-      case value: JShort   => value.intValue
-      case value: JInteger => value
-      case _               => bad(name)
-    }
-
-  def toOptionKeepAlive(map: JMap[String, AnyRef]): Option[(Int, Int)] =
-    Option(map.get("keepAlive")).map {
-      case value: JMap[?, ?] =>
-        try
-          (toInt(asMap(value), "timeout"), toInt(asMap(value), "max"))
-        catch case cause: Exception => bad("keepAlive", cause)
-      case _ => bad("keepAlive")
-    }
-
-  def toOptionSsl(map: JMap[String, AnyRef]): Option[(File, File)] =
-    Option(map.get("ssl")).map {
-      case value: JMap[?, ?]   =>
-        try
-          (toFile(asMap(value), "key"), toFile(asMap(value), "certificate"))
-        catch case cause: Exception => bad("ssl", cause)
-      case _ => bad("ssl")
-    }
+    def optionSsl(): Option[(File, File)] =
+      Option(map.get("ssl")).map {
+        case value: JMap[?, ?] =>
+          try
+            val ssl = asJMap[String, AnyRef](value)
+            (ssl.requireFile("key"), ssl.requireFile("certificate"))
+          catch case cause: Exception => bad("ssl", cause)
+        case _ => bad("ssl")
+      }

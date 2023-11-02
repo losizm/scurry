@@ -19,16 +19,16 @@ import scamper.http.server.ServerApplication
 
 import settings.ServerSettingsConverter
 
-private object toScamperServerApplication extends ServerSettingsConverter:
+private object toRealServerApplication extends ServerSettingsConverter:
   def apply(map: JMap[String, AnyRef]): ServerApplication =
     val app = ServerApplication()
-    toOptionInt(map, "backlogSize").foreach(app.backlogSize)
-    toOptionInt(map, "queueSize").foreach(app.queueSize)
-    toOptionInt(map, "poolSize").foreach(app.poolSize)
-    toOptionInt(map, "bufferSize").foreach(app.bufferSize)
-    toOptionInt(map, "readTimeout").foreach(app.readTimeout)
-    toOptionInt(map, "headerLimit").foreach(app.headerLimit)
-    toOptionString(map, "logger").foreach(app.logger)
-    toOptionKeepAlive(map).foreach(app.keepAlive(_, _))
-    toOptionSsl(map).foreach(app.secure(_, _))
+    map.optionInt("backlogSize").foreach(app.backlogSize)
+    map.optionInt("queueSize").foreach(app.queueSize)
+    map.optionInt("poolSize").foreach(app.poolSize)
+    map.optionInt("bufferSize").foreach(app.bufferSize)
+    map.optionInt("readTimeout").foreach(app.readTimeout)
+    map.optionInt("headerLimit").foreach(app.headerLimit)
+    map.optionString("logger").foreach(app.logger)
+    map.optionKeepAlive().foreach(app.keepAlive(_, _))
+    map.optionSsl().foreach(app.secure(_, _))
     app

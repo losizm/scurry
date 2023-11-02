@@ -14,34 +14,34 @@ def client = new HttpClient(
 )
 
 // Send GET request
-client.get(url: '/greet?name=developer') { res ->
+client.get(target: '/greet?name=developer') { res ->
   log.info "[client] ${res.body.toString(8192)}"
 }
 
 // Manually create GET request and add query parameter
-def greetRequest = new Get(url: '/greet', query: [name: 'Big Dawg'])
+def greetRequest = new Get(target: '/greet', query: [name: 'Big Dawg'])
 client.send(greetRequest) { res ->
   log.info "[client] ${res.body.toString(8192)}"
 }
 
 // Send GET request with path parameter
-client.get(url: '/greet/Lupita') { res ->
+client.get(target: '/greet/Lupita') { res ->
   log.info "[client] ${res.body.toString(8192)}"
 }
 
 // Send POST request with message body
-client.post(url: '/echo', body: '''Hello, it's me.''') { res ->
+client.post(target: '/echo', body: '''Hello, it's me.''') { res ->
   log.info "[client] ${res.body.toString(8192)}"
 }
 
 // Manually create POST request and add message body
-def echoRequest = new Post(url: '/echo', body: 'Just me again.')
+def echoRequest = new Post(target: '/echo', body: 'Just me again.')
 client.send(echoRequest) { res ->
   log.info "[client] ${res.body.toString(8192)}"
 }
 
 // Send empty POST request and handle client error
-client.post(url: '/echo', body: '') { res ->
+client.post(target: '/echo', body: '') { res ->
   if (res.successful)
     log.info '''[client] This won't be printed.'''
   else

@@ -23,13 +23,13 @@ def createComment(httpClient, text, ... attachments) {
     : text
 
   // Create comment
-  def commentUrl = httpClient.post(url: '/api/comments', body: commentBody) { res ->
+  def commentUrl = httpClient.post(target: '/api/comments', body: commentBody) { res ->
     checkResponse(res)
     res.headers['Location']
   }
 
   // Get comment
-  httpClient.get(url: commentUrl) { res ->
+  httpClient.get(target: commentUrl) { res ->
     checkResponse(res)
 
     def comment = json.parse(res.body.toInputStream(16 * 1024))
@@ -43,12 +43,12 @@ def createComment(httpClient, text, ... attachments) {
   }
 
   // Update comment
-  httpClient.put(url: commentUrl, body: updateText) { res ->
+  httpClient.put(target: commentUrl, body: updateText) { res ->
     checkResponse(res)
   }
 
   // Check updated comment
-  httpClient.get(url: commentUrl) { res ->
+  httpClient.get(target: commentUrl) { res ->
     checkResponse(res)
 
     def comment = json.parse(res.body.toInputStream(16 * 1024))
@@ -59,12 +59,12 @@ def createComment(httpClient, text, ... attachments) {
   }
 
   // Delete comment
-  httpClient.delete(url: commentUrl) { res ->
+  httpClient.delete(target: commentUrl) { res ->
     checkResponse(res)
   }
 
   // Check deleted comment
-  httpClient.get(url: commentUrl) { res ->
+  httpClient.get(target: commentUrl) { res ->
     if (res.statusCode != 404) {
       res.drain(8 * KB)
       throw Exception("${res.statusCode} ${res.reasonPhrase}")

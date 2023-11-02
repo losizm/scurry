@@ -16,57 +16,22 @@
 package scurry.http
 
 import java.net.Socket
-import java.time.Instant
-import java.util.Date
 
-import scamper.http.Header
 import scamper.http.server.ServerHttpMessage
 
 import settings.{ ActiveServerSettings, ServerSettings }
 
-private trait ServerSideHttpMessage:
-  self: HttpMessage =>
-
-  def setHeader(name: String, value: AnyRef): Unit =
-    value match
-      case value: CharSequence => setScamperHttpMessage(scamperMessageBuilder.putHeaders(Header(name, value.toString)))
-      case value: JShort       => setScamperHttpMessage(scamperMessageBuilder.putHeaders(Header(name, value.intValue)))
-      case value: JInteger     => setScamperHttpMessage(scamperMessageBuilder.putHeaders(Header(name, value.intValue)))
-      case value: JLong        => setScamperHttpMessage(scamperMessageBuilder.putHeaders(Header(name, value.longValue)))
-      case value: Instant      => setScamperHttpMessage(scamperMessageBuilder.putHeaders(Header(name, value)))
-      case value: Date         => setScamperHttpMessage(scamperMessageBuilder.putHeaders(Header(name, value.toInstant)))
-      case _                   => throw IllegalArgumentException("Invalid header value")
-
-  def addHeader(name: String, value: AnyRef): Unit =
-    value match
-      case value: CharSequence => setScamperHttpMessage(scamperMessageBuilder.addHeaders(Header(name, value.toString)))
-      case value: JShort       => setScamperHttpMessage(scamperMessageBuilder.addHeaders(Header(name, value.intValue)))
-      case value: JInteger     => setScamperHttpMessage(scamperMessageBuilder.addHeaders(Header(name, value.intValue)))
-      case value: JLong        => setScamperHttpMessage(scamperMessageBuilder.addHeaders(Header(name, value.longValue)))
-      case value: Instant      => setScamperHttpMessage(scamperMessageBuilder.addHeaders(Header(name, value)))
-      case value: Date         => setScamperHttpMessage(scamperMessageBuilder.addHeaders(Header(name, value.toInstant)))
-      case _                   => throw IllegalArgumentException("Invalid header value")
-
-  def removeHeader(name: String): Unit =
-    setScamperHttpMessage(scamperMessageBuilder.removeHeaders(name))
-
-  def getAttribute(name: String): AnyRef =
-    scamperHttpMessage.getAttributeOrElse(name, null)
-
-  def setAttribute(name: String, value: AnyRef): Unit =
-    setScamperHttpMessage(scamperMessageBuilder.putAttributes(name -> value))
-
-  def removeAttribute(name: String): Unit =
-    setScamperHttpMessage(scamperMessageBuilder.removeAttributes(name))
+private trait ServerSideHttpMessage extends MutableHttpMessage:
+  msg: HttpMessage =>
 
   def getServerSettings(): ServerSettings =
-    ActiveServerSettings(scamperHttpMessage.server)
-
-  def getCorrelate(): String =
-    scamperHttpMessage.correlate
-
-  def getRequestCount(): Int =
-    scamperHttpMessage.requestCount
+    ActiveServerSettings(realHttpMessage.server)
 
   def getSocket(): Socket =
-    scamperHttpMessage.socket
+    realHttpMessage.socket
+
+  def getCorrelate(): String =
+    realHttpMessage.correlate
+
+  def getRequestCount(): Int =
+    realHttpMessage.requestCount

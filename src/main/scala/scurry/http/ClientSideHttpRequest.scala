@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 package scurry.http
-package settings
 
-private[scurry] class ActiveServerSettings(server: RealHttpServer) extends ServerSettings:
-  def isSslEnabled(): Boolean = server.isSecure
-  def getHost(): String = server.host.getHostAddress
-  def getPort(): Int = server.port
-  def getBacklogSize(): Int = server.backlogSize
-  def getQueueSize(): Int = server.queueSize
-  def getPoolSize(): Int = server.poolSize
-  def getBufferSize(): Int = server.bufferSize
-  def getReadTimeout(): Int = server.readTimeout
-  def getHeaderLimit(): Int = server.headerLimit
-  def isKeepAliveEnabled(): Boolean = server.keepAlive.nonEmpty
+import scamper.http.client.ClientHttpRequest
+
+private class ClientSideHttpRequest(req: RealHttpRequest) extends HttpRequest(req) with ClientSideHttpMessage with Authorization:
+  def this(req: JMap[String, AnyRef]) =
+    this(toRealHttpRequest(req))
+
+  def setDeflateContentEncoding(bufferSize: Int): this.type =
+    setRealHttpMessage(realHttpMessage.setDeflateContentEncoding(bufferSize))
+    this
+
+  def setGzipContentEncoding(bufferSize: Int): this.type =
+    setRealHttpMessage(realHttpMessage.setGzipContentEncoding(bufferSize))
+    this

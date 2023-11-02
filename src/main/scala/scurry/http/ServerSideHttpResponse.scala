@@ -17,36 +17,36 @@ package scurry.http
 
 import java.io.File
 import java.nio.file.Path
-import java.time.Instant
-import java.util.Date
 
-import scamper.http.Header
 import scamper.http.server.ServerHttpResponse
-import scamper.http.types.MediaType
 
 import settings.{ ActiveServerSettings, ServerSettings }
 
-private[scurry] class ServerSideHttpResponse(res: ScamperHttpResponse) extends HttpResponse(res) with ServerSideHttpMessage:
+private[scurry] class ServerSideHttpResponse(res: RealHttpResponse) extends HttpResponse(res) with ServerSideHttpMessage with WwwAuthenticate:
   def this(res: JMap[String, AnyRef]) =
-    this(toScamperHttpResponse(res))
+    this(toRealHttpResponse(res))
 
   def getRequest(): HttpRequest =
-    scamperHttpMessage.request
+    realHttpMessage.request
       .map(HttpRequest(_))
       .getOrElse(null)
 
-  def setAttachment(file: File | Path): Unit =
+  def setAttachment(file: File | Path): this.type =
     file match
-      case f: File => setScamperHttpMessage(scamperHttpMessage.setAttachment(f))
-      case f: Path => setScamperHttpMessage(scamperHttpMessage.setAttachment(f.toFile))
+      case f: File => setRealHttpMessage(realHttpMessage.setAttachment(f))
+      case f: Path => setRealHttpMessage(realHttpMessage.setAttachment(f.toFile))
+    this
 
-  def setInline(file: File | Path): Unit =
+  def setInline(file: File | Path): this.type =
     file match
-      case f: File => setScamperHttpMessage(scamperHttpMessage.setInline(f))
-      case f: Path => setScamperHttpMessage(scamperHttpMessage.setInline(f.toFile))
+      case f: File => setRealHttpMessage(realHttpMessage.setInline(f))
+      case f: Path => setRealHttpMessage(realHttpMessage.setInline(f.toFile))
+    this
 
-  def setDeflateContentEncoding(bufferSize: Int): Unit =
-    setScamperHttpMessage(scamperHttpMessage.setDeflateContentEncoding(bufferSize))
+  def setDeflateContentEncoding(bufferSize: Int): this.type =
+    setRealHttpMessage(realHttpMessage.setDeflateContentEncoding(bufferSize))
+    this
 
-  def setGzipContentEncoding(bufferSize: Int): Unit =
-    setScamperHttpMessage(scamperHttpMessage.setGzipContentEncoding(bufferSize))
+  def setGzipContentEncoding(bufferSize: Int): this.type =
+    setRealHttpMessage(realHttpMessage.setGzipContentEncoding(bufferSize))
+    this

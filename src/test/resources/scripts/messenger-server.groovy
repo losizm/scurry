@@ -20,13 +20,16 @@ def httpServer = new HttpServer(
   keepAlive: null
 )
 
-httpServer.incoming {
+def logHttpMessage(msg) {
   log.info '[server]'
-  log.info "${it.startLine}"
-  it.headers.each { log.info "$it" }
+  log.info "${msg.startLine}"
+  msg.headers.each { log.info "$it" }
   log.info ''
-  it
+  msg
 }
+
+httpServer.incoming { logHttpMessage(it) }
+httpServer.outgoing { logHttpMessage(it) }
 
 httpServer.trigger {
   log.info "[server] trigger event received: [type: ${it.type}, host: ${it.server.host}, port: ${it.server.port}, sslEnabled: ${it.server.sslEnabled}]"

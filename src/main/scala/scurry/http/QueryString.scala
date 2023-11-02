@@ -21,20 +21,20 @@ import java.util.HashMap as JHashMap
 import scala.jdk.javaapi.CollectionConverters.asJava
 
 /** Encapsulates query string. */
-class QueryString private[scurry] (query: ScamperQueryString):
+class QueryString private[scurry] (query: RealQueryString):
   /**
    * Creates query string from supplied encoded query string.
    *
    * @param query encoded query string
    */
-  def this(query: String) = this(ScamperQueryString(query))
+  def this(query: String) = this(RealQueryString(query))
 
   /**
    * Creates query string from supplied parameters.
    *
    * @param params query parameters
    */
-  def this(params: JMap[String, AnyRef]) = this(toScamperQueryString(params))
+  def this(params: JMap[String, AnyRef]) = this(toRealQueryString(params))
 
 
   /** Tests empty. */
@@ -43,7 +43,7 @@ class QueryString private[scurry] (query: ScamperQueryString):
 
   /** Gets parameter names. */
   def getNames(): JList[String] =
-    toList(query.names)
+    toJList(query.names)
 
   /**
    * Gets parameter value.
@@ -79,13 +79,13 @@ class QueryString private[scurry] (query: ScamperQueryString):
    * @param name parameter name
    */
   def getValues(name: String): JList[String] =
-    toList(query.getValues(name))
+    toJList(query.getValues(name))
 
   /** Gets iterator to parameters. */
   def iterator(): JIterator[AnyRef] =
     asJava(query.toSeq.map(toParam).iterator)
 
-  private[scurry] def toScamperQueryString: ScamperQueryString =
+  private[scurry] def realQueryString: RealQueryString =
     query
 
   private def toParam(name: String, value: String): JMap[String, String] =

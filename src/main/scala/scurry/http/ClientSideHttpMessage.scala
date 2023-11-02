@@ -14,16 +14,24 @@
  * limitations under the License.
  */
 package scurry.http
-package settings
 
-private[scurry] class ActiveServerSettings(server: RealHttpServer) extends ServerSettings:
-  def isSslEnabled(): Boolean = server.isSecure
-  def getHost(): String = server.host.getHostAddress
-  def getPort(): Int = server.port
-  def getBacklogSize(): Int = server.backlogSize
-  def getQueueSize(): Int = server.queueSize
-  def getPoolSize(): Int = server.poolSize
-  def getBufferSize(): Int = server.bufferSize
-  def getReadTimeout(): Int = server.readTimeout
-  def getHeaderLimit(): Int = server.headerLimit
-  def isKeepAliveEnabled(): Boolean = server.keepAlive.nonEmpty
+import java.net.Socket
+
+import scamper.http.client.ClientHttpMessage
+
+import settings.{ ActiveClientSettings, ClientSettings }
+
+private trait ClientSideHttpMessage extends MutableHttpMessage:
+  msg: HttpMessage =>
+
+  def getClientSettings(): ClientSettings =
+    ActiveClientSettings(realHttpMessage.client)
+
+  def getSocket(): Socket =
+    realHttpMessage.socket
+
+  def getCorrelate(): String =
+    realHttpMessage.correlate
+
+  def getAbsoluteTarget(): String =
+    realHttpMessage.absoluteTarget.toString

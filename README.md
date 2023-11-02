@@ -8,8 +8,8 @@ The Groovy-_esque_ wrapper for [Scamper](https://github.com/losizm/scamper).
 ## Let's Scurry!
 
 Although there are no references to Groovy itself in the codebase, this library
-is intended for Groovy developers. It defines a typeless interface to Scamper in
-favor of dynamic typing, which is a Groovy staple.
+is intended for Groovy developers. It defines an interface to Scamper using a
+mixture of static and dynamic typing to provide a fluid programming experience.
 
 ### HTTP Server
 
@@ -81,17 +81,17 @@ def client = new HttpClient(
 )
 
 // Send GET request
-client.get(url: '/greet', query: [name: 'Lupita']) { res ->
+client.get(target: '/greet', query: [name: 'Lupita']) { res ->
   println "[client] ${res.body.toString(8192)}"
 }
 
 // Send POST request with message body
-client.post(url: '/echo', body: 'Can you hear me?') { res ->
+client.post(target: '/echo', body: 'Can you hear me?') { res ->
   println "[client] ${res.body.toString(8192)}"
 }
 
 // Send empty POST request and handle client error
-client.post(url: '/echo', body: null) { res ->
+client.post(target: '/echo', body: null) { res ->
   println "[client] ${res.statusCode} ${res.reasonPhrase}"
   
   if (res.successful) println "[client] This won't print."

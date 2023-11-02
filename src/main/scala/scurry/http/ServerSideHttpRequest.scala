@@ -18,17 +18,17 @@ package scurry.http
 import scamper.http.server.{ PathParameters, ServerHttpRequest }
 import scamper.http.types.MediaType
 
-private class ServerSideHttpRequest(req: ScamperHttpRequest) extends HttpRequest(req) with ServerSideHttpMessage:
+private class ServerSideHttpRequest(req: RealHttpRequest) extends HttpRequest(req) with ServerSideHttpMessage with Authorization:
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req))
+    this(toRealHttpRequest(req))
 
   def getPathParameters(): PathParameters =
-    scamperHttpMessage.pathParams
+    realHttpMessage.pathParams
 
   def continue(): Boolean =
-    scamperHttpMessage.continue()
+    realHttpMessage.continue()
 
   def findAccepted(types: JList[String]): String =
-    scamperHttpMessage.findAccepted(toSeq(types).map(MediaType(_)))
+    realHttpMessage.findAccepted(toSeq(types).map(MediaType(_)))
       .map(_.toString)
       .getOrElse(null)

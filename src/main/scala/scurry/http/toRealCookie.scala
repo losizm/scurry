@@ -22,7 +22,7 @@ import scala.collection.mutable.ListBuffer
 
 import scamper.http.cookies.{ Cookie, PlainCookie, SetCookie }
 
-private object toScamperCookies extends Converter:
+private object toRealCookies extends Converter:
   def apply(list: JList[AnyRef]): Seq[Cookie] =
     apply(list.toArray.toSeq)
 
@@ -31,7 +31,7 @@ private object toScamperCookies extends Converter:
       list.map {
         case null              => throw NullPointerException("cookie")
         case value: Cookie     => value
-        case value: JMap[?, ?] => toCookie(asMap[String, AnyRef](value))
+        case value: JMap[?, ?] => toCookie(asJMap(value))
         case _                 => bad("unknown cookie type")
       }
     catch case cause: Exception =>
@@ -43,46 +43,46 @@ private object toScamperCookies extends Converter:
     val name = map.get("name") match
       case null                => bad("Missing cookie name")
       case value: CharSequence => value.toString
-      case _                   => bad("cookie name")
+      case value               => bad(s"cookie name (${value.getClass})")
 
     val value = map.get("value") match
       case null                => bad("Missing cookie value")
       case value: CharSequence => value.toString
-      case _                   => bad("cookie value")
+      case value               => bad(s"cookie value (${value.getClass})")
 
     val domain = map.get("domain") match
       case null                => None
       case value: CharSequence => isPlain = false; Some(value.toString)
-      case _                   => bad("cookie domain")
+      case value               => bad(s"cookie domain (${value.getClass})")
 
     val path = map.get("path") match
       case null                => None
       case value: CharSequence => isPlain = false; Some(value.toString)
-      case _                   => bad("cookie path")
+      case value               => bad(s"cookie path (${value.getClass})")
 
     val expires = map.get("expires") match
-      case null                 => None
-      case value: Instant       => isPlain = false; Some(value)
-      case value: Date          => isPlain = false; Some(value.toInstant)
-      case value: CharSequence  => isPlain = false; Some(convert("cookie expires", value.toString, Instant.parse(_)))
-      case _                    => bad("cookie expires")
+      case null                => None
+      case value: Instant      => isPlain = false; Some(value)
+      case value: Date         => isPlain = false; Some(value.toInstant)
+      case value: CharSequence => isPlain = false; Some(convert("cookie expires", value.toString, Instant.parse(_)))
+      case value               => bad(s"cookie expires (${value.getClass})")
 
     val maxAge = map.get("maxAge") match
       case null            => None
       case value: JShort   => isPlain = false; Some(value.longValue)
       case value: JInteger => isPlain = false; Some(value.longValue)
       case value: JLong    => isPlain = false; Some(value.longValue)
-      case _               => bad("cookie maxAge")
+      case value           => bad(s"cookie maxAge (${value.getClass})")
 
     val secure = map.get("secure") match
       case null            => None
       case value: JBoolean => isPlain = false; Some(value.booleanValue)
-      case _               => bad("cookie secure")
+      case value           => bad(s"cookie secure (${value.getClass})")
 
     val httpOnly = map.get("httpOnly") match
       case null            => None
       case value: JBoolean => isPlain = false; Some(value.booleanValue)
-      case _               => bad("cookie httpOnly")
+      case value           => bad(s"cookie httpOnly (${value.getClass})")
 
     isPlain match
       case true  => PlainCookie(name, value)

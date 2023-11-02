@@ -17,16 +17,16 @@ package scurry.http
 package settings
 
 private[scurry] class InactiveServerSettings(settings: JMap[String, AnyRef]) extends ServerSettings with ServerSettingsConverter:
-  private lazy val host = toHost(settings)
-  private lazy val port = toPort(settings)
-  private lazy val backlogSize = toOptionInt(settings, "backlogSize").getOrElse(0)
-  private lazy val queueSize = toOptionInt(settings, "queueSize").getOrElse(0)
-  private lazy val poolSize = toOptionInt(settings, "poolSize").getOrElse(0)
-  private lazy val bufferSize = toOptionInt(settings, "bufferSize").getOrElse(0)
-  private lazy val readTimeout = toOptionInt(settings, "readTimeout").getOrElse(0)
-  private lazy val headerLimit = toOptionInt(settings, "headerLimit").getOrElse(0)
-  private lazy val keepAlive = toOptionKeepAlive(settings)
-  private lazy val ssl = toOptionSsl(settings)
+  private lazy val host = settings.requireHost()
+  private lazy val port = settings.requirePort()
+  private lazy val backlogSize = settings.optionInt("backlogSize").getOrElse(0)
+  private lazy val queueSize = settings.optionInt("queueSize").getOrElse(0)
+  private lazy val poolSize = settings.optionInt("poolSize").getOrElse(0)
+  private lazy val bufferSize = settings.optionInt("bufferSize").getOrElse(0)
+  private lazy val readTimeout = settings.optionInt("readTimeout").getOrElse(0)
+  private lazy val headerLimit = settings.optionInt("headerLimit").getOrElse(0)
+  private lazy val keepAlive = settings.optionKeepAlive()
+  private lazy val ssl = settings.optionSsl()
 
   def isSslEnabled(): Boolean =
     ssl.nonEmpty

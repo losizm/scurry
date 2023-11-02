@@ -19,10 +19,14 @@ import java.io.{ BufferedReader, File, InputStream, OutputStream }
 import java.nio.file.Path
 
 import scamper.http.BodyParser
-import ScamperMultipart.bodyParser as MultipartBodyParser
+import RealMultipart.bodyParser as MultipartBodyParser
 
 /** Encapsulates HTTP message body. */
-class Body private[scurry](msg: ScamperHttpMessage):
+class Body private[scurry](msg: RealHttpMessage):
+  /** Tests for known empty. */
+  def isKnownEmpty(): Boolean =
+    msg.body.isKnownEmpty
+
   /**
    * Drains message body.
    *

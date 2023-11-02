@@ -20,41 +20,65 @@ import scamper.http.cookies.{ RequestCookies, ResponseCookies }
 
 /** Encapsulates HTTP message. */
 sealed abstract class HttpMessage private[scurry] ():
-  private[scurry] type ScamperHttpMessageType <: ScamperHttpMessage
+  private[scurry] type RealMessageType <: RealHttpMessage
 
   /** Gets message start line. */
   def getStartLine(): String =
-    scamperHttpMessage.startLine.toString
+    realHttpMessage.startLine.toString
 
   /** Gets HTTP version. */
   def getHttpVersion(): String =
-    scamperHttpMessage.version.toString
+    realHttpMessage.version.toString
 
   /** Gets message headers. */
   def getHeaders(): Headers =
-    Headers(scamperHttpMessage.headers)
+    Headers(realHttpMessage.headers)
 
   /** Gets cookies. */
   def getCookies(): Cookies
 
   /** Gets message body. */
   def getBody(): Body =
-    Body(scamperHttpMessage)
+    Body(realHttpMessage)
 
-  private[scurry] def scamperHttpMessage: ScamperHttpMessageType
+  private[scurry] def realHttpMessage: RealMessageType
 
-  private[scurry] def setScamperHttpMessage(msg: ScamperHttpMessageType): Unit
+  private[scurry] def setRealHttpMessage(msg: RealMessageType): Unit
 
-  private[scurry] def scamperMessageBuilder: MessageBuilder[ScamperHttpMessageType] =
-    scamperHttpMessage.asInstanceOf[MessageBuilder[ScamperHttpMessageType]]
+  private[scurry] def realMessageBuilder: MessageBuilder[RealMessageType] =
+    realHttpMessage.asInstanceOf[MessageBuilder[RealMessageType]]
 
 /** Encapsulates HTTP request. */
-class HttpRequest private[scurry] (private var req: ScamperHttpRequest) extends HttpMessage:
-  private[scurry] type ScamperHttpMessageType = ScamperHttpRequest
-
-  /** Creates HTTP request from supplied request. */
+class HttpRequest private[scurry] (private var req: RealHttpRequest) extends HttpMessage:
+  /**
+   * Creates HTTP request from supplied request.
+   *
+   * {{{
+   *  import scurry.http.HttpRequest
+   *
+   *  def request = new HttpRequest(
+   *    method: "POST",
+   *    target: "https://api.example.com/messages",
+   *    headers: [
+   *      "Content-Type": "text/plain; charset=UTF-8",
+   *      "Authorization": "Bearer 94c2f320-7120-4338-8e40-42bc2581dd05"
+   *    ],
+   *    cookies: [
+   *     [name: "sessionid", value: "230148A1-030E-4680-B55E-743B6ABBA6FA"],
+   *     [name: "region", value: "us-se"]
+   *    ],
+   *    // Supply body as Array[Byte], String, File, Path, InputStream, Reader,
+   *    // QueryString, Multipart, or BodyWriter
+   *    body: "Hello, world!"
+   *  )
+   * }}}
+   *
+   * @see [[Body]], [[BodyWriter]], [[Multipart]], [[QueryString]]
+   */
   def this(req: JMap[String, AnyRef]) =
-    this(toScamperHttpRequest(req))
+    this(toRealHttpRequest(req))
+
+  private[scurry] type RealMessageType = RealHttpRequest
 
   private lazy val query = QueryString(req.query)
   private lazy val cookies = Cookies(req.cookies)
@@ -63,11 +87,11 @@ class HttpRequest private[scurry] (private var req: ScamperHttpRequest) extends 
   def getMethod(): String =
     req.method.toString
 
-  /** Gets request target. */
+  /** Gets target URI. */
   def getTarget(): String =
     req.target.toString
 
-  /** Gets request path. */
+  /** Gets target path. */
   def getPath(): String =
     req.path
 
@@ -79,18 +103,54 @@ class HttpRequest private[scurry] (private var req: ScamperHttpRequest) extends 
   def getCookies(): Cookies =
     cookies
 
-  private[scurry] def scamperHttpMessage: ScamperHttpRequest = req
+  private[scurry] def realHttpMessage: RealHttpRequest = req
 
-  private[scurry] def setScamperHttpMessage(req: ScamperHttpRequest): Unit =
+  private[scurry] def setRealHttpMessage(req: RealHttpRequest): Unit =
     this.req = req
 
 /** Encapsulates HTTP response. */
-class HttpResponse  private[scurry] (private var res: ScamperHttpResponse) extends HttpMessage:
-  private[scurry] type ScamperHttpMessageType = ScamperHttpResponse
-
-  /** Creates HTTP response from supplied response. */
+class HttpResponse  private[scurry] (private var res: RealHttpResponse) extends HttpMessage:
+  /**
+   * Creates HTTP response from supplied response.
+   *
+   * {{{
+   *  import java.time.Instant
+   *  import scurry.http.HttpResponse
+   *
+   *  def now = Instant.now()
+   *  def file = './path/to/example.json' as File
+   *  def lastModified = file.lastModified()
+   *
+   *  def response = new HttpResponse(
+   *    statusCode: 200,
+   *    headers: [
+   *      "Content-Type": "application/json",
+   *      "Content-Length": file.size(),
+   *      "Last-Modified": Instant.ofEpochMilli(lastModified),
+   *      "Date": now
+   *    ],
+   *    cookies: [
+   *     [
+   *       name: "sessionid",
+   *       value: "230148A1-030E-4680-B55E-743B6ABBA6FA",
+   *       domain: ".example.com",
+   *       secure: true,
+   *       expires: now + 300
+   *     ],
+   *     [name: "region", value: "us-se", domain: ".example.com"]
+   *    ],
+   *    // Supply body as Array[Byte], String, File, Path, InputStream, Reader,
+   *    // QueryString, Multipart, or BodyWriter
+   *    body: file
+   *  )
+   * }}}
+   *
+   * @see [[Body]], [[BodyWriter]], [[Multipart]], [[QueryString]]
+   */
   def this(res: JMap[String, AnyRef]) =
-    this(toScamperHttpResponse(res))
+    this(toRealHttpResponse(res))
+
+  private[scurry] type RealMessageType = RealHttpResponse
 
   private lazy val cookies = Cookies(res.cookies)
 
@@ -126,7 +186,7 @@ class HttpResponse  private[scurry] (private var res: ScamperHttpResponse) exten
   def getCookies(): Cookies =
     cookies
 
-  private[scurry] def scamperHttpMessage: ScamperHttpResponse = res
+  private[scurry] def realHttpMessage: RealHttpResponse = res
 
-  private[scurry] def setScamperHttpMessage(res: ScamperHttpResponse): Unit =
+  private[scurry] def setRealHttpMessage(res: RealHttpResponse): Unit =
     this.res = res

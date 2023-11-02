@@ -20,14 +20,14 @@ import java.nio.file.Path
 
 import scamper.http.{ Entity, Header, MessageBuilder }
 import scamper.http.{ getHeaderValue, setFileBody, setFormBody, setOctetBody, setPlainBody }
-import scamper.http.multipart.setMultipartBody as setScamperMultipartBody
-import ScamperMultipart.boundary as multipartBoundary
+import scamper.http.multipart.setMultipartBody as setRealMultipartBody
+import RealMultipart.boundary as multipartBoundary
 
-private trait ScamperHttpMessageExtensions extends Converter:
+private trait RealHttpMessageExtensions extends Converter:
   private val plainHeader = Header("Content-Type", "text/plain")
   private val octetHeader = Header("Content-Type", "application/octet-stream")
 
-  extension [T <: ScamperHttpMessage & MessageBuilder[T]] (msg: T)
+  extension [T <: RealHttpMessage & MessageBuilder[T]] (msg: T)
     def setAnyRefBody(body: AnyRef, autoContentType: Boolean): T =
       body match
         case null                => msg
@@ -41,7 +41,7 @@ private trait ScamperHttpMessageExtensions extends Converter:
         case value: Multipart    => msg.setMultipartBody(value, autoContentType)
         case value: BodyWriter   => msg.setBodyWriterBody(value, autoContentType)
         case value: JMap[?, ?]   => msg.setParamsBody(value, autoContentType)
-        case _                   => bad("body")
+        case value               => bad(s"body (${value.getClass})")
 
     def setCharSequenceBody(value: CharSequence, autoContentType: Boolean): T =
       autoContentType match
@@ -66,15 +66,15 @@ private trait ScamperHttpMessageExtensions extends Converter:
         case false => msg.setBody(entity)
 
     def setQueryStringBody(value: QueryString, autoContentType: Boolean): T =
-      val queryString = value.toScamperQueryString
+      val queryString = value.realQueryString
       autoContentType match
         case true  => msg.setFormBody(queryString)
         case false => msg.setBody(Entity(queryString))
 
     def setMultipartBody(value: Multipart, autoContentType: Boolean): T =
-      val multipart = value.toScamperMultipart
+      val multipart = value.realMultipart
       autoContentType match
-        case true  => msg.setScamperMultipartBody(multipart)
+        case true  => msg.setRealMultipartBody(multipart)
         case false => msg.setBody(multipart.toEntity(multipartBoundary()))
 
     def setBodyWriterBody(value: BodyWriter, autoContentType: Boolean): T =
@@ -84,5 +84,5 @@ private trait ScamperHttpMessageExtensions extends Converter:
         case false => msg.setBody(entity)
 
     def setParamsBody(value: JMap[?, ?], autoContentType: Boolean): T =
-      val queryString = convert("body", asMap[String, AnyRef](value), QueryString(_))
+      val queryString = convert("body", asJMap[String, AnyRef](value), QueryString(_))
       setQueryStringBody(queryString, autoContentType)
