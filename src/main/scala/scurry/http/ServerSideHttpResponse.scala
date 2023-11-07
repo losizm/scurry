@@ -18,7 +18,9 @@ package scurry.http
 import java.io.File
 import java.nio.file.Path
 
-import scamper.http.server.ServerHttpResponse
+import scala.language.implicitConversions
+
+import scamper.http.server.toServerHttpResponse
 
 import settings.{ ActiveServerSettings, ServerSettings }
 

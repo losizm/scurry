@@ -17,21 +17,19 @@ package scurry.http
 
 import java.util.LinkedHashMap as JLinkedHashMap
 
-import scamper.http.auth.{ Authorization as RealAuthorization, * }
+import scala.language.implicitConversions
+
+import scamper.http.auth.{ toAuthorization, * }
 
 private trait Authorization:
   req: HttpRequest =>
 
   def getAuthorization(): AnyRef =
-    import scamper.http.auth.Authorization
-
     req.realHttpMessage.authorizationOption match
       case None        => null
       case Some(value) => toCredentials(value)
 
   def setAuthorization(credentials: AnyRef): HttpRequest =
-    import scamper.http.auth.Authorization
-
     credentials match
       case value: Credentials => req.setRealHttpMessage(req.realHttpMessage.setAuthorization(value))
       case value: JMap[?, ?]  => req.setRealHttpMessage(req.realHttpMessage.setAuthorization(toRealCredentials(asJMap(value))))
@@ -40,8 +38,6 @@ private trait Authorization:
     req
 
   def removeAuthorization(): HttpRequest =
-    import scamper.http.auth.Authorization
-
     req.setRealHttpMessage(req.realHttpMessage.authorizationRemoved)
     req
 

@@ -15,7 +15,9 @@
  */
 package scurry.http
 
-import scamper.http.server.{ PathParameters, ServerHttpRequest }
+import scala.language.implicitConversions
+
+import scamper.http.server.{ PathParameters, toServerHttpRequest }
 import scamper.http.types.MediaType
 
 private class ServerSideHttpRequest(req: RealHttpRequest) extends HttpRequest(req) with ServerSideHttpMessage with Authorization:

@@ -15,8 +15,10 @@
  */
 package scurry.http
 
+import scala.language.implicitConversions
+
 import scamper.http.MessageBuilder
-import scamper.http.cookies.{ RequestCookies, ResponseCookies }
+import scamper.http.cookies.{ toRequestCookies, toResponseCookies }
 
 /** Encapsulates HTTP message. */
 sealed abstract class HttpMessage private[scurry] ():

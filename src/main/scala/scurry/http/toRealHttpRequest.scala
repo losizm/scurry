@@ -17,9 +17,11 @@ package scurry.http
 
 import java.net.{ URI, URL }
 
+import scala.language.implicitConversions
+
 import scamper.http.{ RequestMethod, Uri, getHeaderValue }
-import scamper.http.auth.{ Authorization, Credentials }
-import scamper.http.cookies.{ PlainCookie, RequestCookies }
+import scamper.http.auth.{ Credentials, toAuthorization }
+import scamper.http.cookies.{ PlainCookie, toRequestCookies }
 
 private object toRealHttpRequest extends RealHttpMessageExtensions:
   def apply(map: JMap[String, AnyRef], method: String): RealHttpRequest =

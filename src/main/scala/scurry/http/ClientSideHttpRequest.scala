@@ -15,7 +15,9 @@
  */
 package scurry.http
 
-import scamper.http.client.ClientHttpRequest
+import scala.language.implicitConversions
+
+import scamper.http.client.toClientHttpRequest
 
 private class ClientSideHttpRequest(req: RealHttpRequest) extends HttpRequest(req) with ClientSideHttpMessage with Authorization:
   def this(req: JMap[String, AnyRef]) =

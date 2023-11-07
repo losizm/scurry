@@ -15,9 +15,11 @@
  */
 package scurry.http
 
+import scala.language.implicitConversions
+
 import scamper.http.RequestMethod
 import scamper.http.client.{ ClientSettings as RealClientSettings, HttpClient as RealHttpClient, * }
-import scamper.http.cookies.RequestCookies
+import scamper.http.cookies.toRequestCookies
 import RequestMethod.Registry.*
 
 import settings.*

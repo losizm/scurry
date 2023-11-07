@@ -18,22 +18,19 @@ package scurry.http
 import java.util.LinkedHashMap as JLinkedHashMap
 
 import scala.jdk.javaapi.CollectionConverters.asJava
+import scala.language.implicitConversions
 
-import scamper.http.auth.{ WwwAuthenticate as RealWwwAuthenticate, * }
+import scamper.http.auth.{ toWwwAuthenticate, * }
 
 private trait WwwAuthenticate:
   res: HttpResponse =>
 
   def getWwwAuthenticate(): AnyRef =
-    import scamper.http.auth.WwwAuthenticate
-
     res.realHttpMessage.wwwAuthenticate match
       case Nil   => null
       case value => toChallenge(value.head)
 
   def setWwwAuthenticate(challenge: AnyRef): HttpResponse =
-    import scamper.http.auth.WwwAuthenticate
-
     challenge match
       case value: Challenge  => res.setRealHttpMessage(res.realHttpMessage.setWwwAuthenticate(value))
       case value: JMap[?, ?] => res.setRealHttpMessage(res.realHttpMessage.setWwwAuthenticate(toRealChallenge(asJMap(value))))
@@ -41,8 +38,6 @@ private trait WwwAuthenticate:
     res
 
   def removeWwwAuthenticate(): HttpResponse =
-    import scamper.http.auth.WwwAuthenticate
-
     res.setRealHttpMessage(res.realHttpMessage.wwwAuthenticateRemoved)
     res
 

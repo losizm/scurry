@@ -15,7 +15,9 @@
  */
 package scurry.http
 
-import scamper.http.client.ClientHttpResponse
+import scala.language.implicitConversions
+
+import scamper.http.client.toClientHttpResponse
 
 private class ClientSideHttpResponse(res: RealHttpResponse) extends HttpResponse(res) with ClientSideHttpMessage with WwwAuthenticate:
   def this(res: JMap[String, AnyRef]) =

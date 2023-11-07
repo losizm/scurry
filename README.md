@@ -54,21 +54,22 @@ server.post('/echo') { req ->
 // Log outgoing responses
 server.outgoing { logHttpMessage(it) }
 
-// Start HTTP server
-server.start()
-
 Thread.start {
-  // Run server for 30 seconds
-  try     { sleep(30000) }
-  finally { server.stop() }
+  try {
+    // Run server for 30 seconds
+    server.start()
+    sleep(30000)
+  }
+  finally {
+    server.stop()
+  }
 }
-
 ```
 
 ### HTTP Client
 
-In the following, the HTTP client is used to talk to server defined in previous
-section:
+In the following example, the HTTP client talks to the server created in the
+previous section:
 
 ```groovy
 import scurry.http.HttpClient
@@ -101,5 +102,5 @@ client.post(target: '/echo', body: null) { res ->
 
 ## License
 
-**Scurry** is licensed under the Apache License, Version 2. See [LICENSE](LICENSE)
+**Scurry** is licensed under Apache License, Version 2. See [LICENSE](LICENSE)
 for more information.

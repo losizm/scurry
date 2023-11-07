@@ -17,7 +17,9 @@ package scurry.http
 
 import java.net.Socket
 
-import scamper.http.server.ServerHttpMessage
+import scala.language.implicitConversions
+
+import scamper.http.server.toServerHttpMessage
 
 import settings.{ ActiveServerSettings, ServerSettings }
 
