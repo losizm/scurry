@@ -17,7 +17,7 @@ def httpClient = new HttpClient(
   cookieStoreEnabled: false,
   resolveTo: [
     host: 'localhost',
-    port: 10080,
+    port: 8080,
     secure: false
   ]
 )

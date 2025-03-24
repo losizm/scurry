@@ -58,7 +58,7 @@ class Body private[scurry](msg: RealHttpMessage):
    * @param length maximum body length
    */
   def toQueryString(length: Int): QueryString =
-    QueryString(msg.as(using BodyParser.query(length)))
+    QueryString(msg.as(using BodyParser.queryString(length)))
 
   /**
    * Gets decoded message body as `Array[Byte]`.
@@ -74,7 +74,7 @@ class Body private[scurry](msg: RealHttpMessage):
    * @param length maximum body length
    */
   def toInputStream(length: Long): InputStream =
-    msg.as(using BodyParser.stream(length))
+    msg.as(using BodyParser.inputStream(length))
 
   /**
    * Gets decoded message body as `BufferedReader`.

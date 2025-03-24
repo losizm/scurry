@@ -40,8 +40,8 @@ abstract class Router private[scurry] (router: RealRouter):
    *
    * @param path router path
    */
-  def toAbsolutePath(path: String): String =
-    router.toAbsolutePath(path)
+  def getAbsolutePath(path: String): String =
+    router.getAbsolutePath(path)
 
   /**
    * Adds request handler.
@@ -137,12 +137,12 @@ abstract class Router private[scurry] (router: RealRouter):
    * @return this
    */
   @annotation.varargs
-  def files(path: String, source: AnyRef, defaults: String*): this.type =
+  def fileserver(path: String, source: AnyRef, defaults: String*): this.type =
     source match
       case null           => throw NullPointerException("source")
-      case source: File   => router.files(path, source, defaults*)
-      case source: Path   => router.files(path, source.toFile, defaults*)
-      case source: String => router.files(path, File(source), defaults*)
+      case source: File   => router.fileserver(path, source, defaults*)
+      case source: Path   => router.fileserver(path, source.toFile, defaults*)
+      case source: String => router.fileserver(path, File(source), defaults*)
       case value          => throw IllegalArgumentException(s"File required for source (${value.getClass})")
     this
 
@@ -156,6 +156,19 @@ abstract class Router private[scurry] (router: RealRouter):
    */
   def route(path: String, module: Router => AnyRef): this.type =
     router.route(path)(toRouterApplication(module))
+    this
+
+  /**
+   * Mounts conditional routing module at specified path.
+   *
+   * @param path request path
+   * @param predicate request predicate
+   * @param module routing module
+   *
+   * @return this
+   */
+  def route(path: String, predicate: HttpRequest => Boolean, module: Router => AnyRef): this.type =
+    router.route(path, toRequestPredicate(predicate))(toRouterApplication(module))
     this
 
   /**
@@ -203,6 +216,9 @@ private object Router:
       case methods: Seq[?]       => methods.map(_.asInstanceOf[AnyRef]).flatMap(toRequestMethods).toSeq
       case methods: JList[?]     => toSeq(asJList(methods)).flatMap(toRequestMethods).toSeq
       case method                => throw IllegalArgumentException(s"Invalid method (${method.getClass})")
+
+  def toRequestPredicate(predicate: HttpRequest => Boolean): RequestPredicate =
+    req => predicate(ServerSideHttpRequest(req))
 
   def toRequestHandler(handler: HttpRequest => AnyRef): RequestHandler =
     req => handler(ServerSideHttpRequest(req)) match

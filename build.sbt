@@ -1,12 +1,12 @@
 organization  := "com.github.losizm"
 name          := "scurry"
-version       := "0.5.0"
+version       := "0.6.0"
 versionScheme := Some("early-semver")
 description   := "The Groovy-esque wrapper for Scamper"
 homepage      := Some(url("https://github.com/losizm/scurry"))
 licenses      := List("Apache License, Version 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-scalaVersion  := "3.3.1"
+scalaVersion  := "3.3.5"
 scalacOptions := Seq("-deprecation", "-feature", "-new-syntax", "-Werror", "-Yno-experimental")
 
 Compile / doc / scalacOptions := Seq(
@@ -16,12 +16,12 @@ Compile / doc / scalacOptions := Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.losizm" %% "scamper"         % "40.0.1" % "provided",
+  "com.github.losizm" %% "scamper"         % "42.0.0" % "provided",
   "ch.qos.logback"    %  "logback-classic" % "1.4.11" % "test",
   "com.typesafe"      %  "config"          % "1.4.3"  % "test",
-  "org.apache.groovy" %  "groovy"          % "4.0.15" % "test",
-  "org.apache.groovy" %  "groovy-json"     % "4.0.15" % "test",
-  "org.scalatest"     %% "scalatest"       % "3.2.17" % "test"
+  "org.apache.groovy" %  "groovy"          % "4.0.26" % "test",
+  "org.apache.groovy" %  "groovy-json"     % "4.0.26" % "test",
+  "org.scalatest"     %% "scalatest"       % "3.2.19" % "test"
 )
 
 scmInfo := Some(

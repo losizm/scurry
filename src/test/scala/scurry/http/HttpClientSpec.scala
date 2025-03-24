@@ -30,7 +30,7 @@ class HttpClientSpec extends org.scalatest.flatspec.AnyFlatSpec:
 
   it should "send request and read response from bible server" in {
     val script = ScriptFile("bible-client")
-    sh.run(script, Array("localhost", "10080"))
+    sh.run(script, Array("localhost", "8080"))
   }
 
   it should "send request and read response from barbershop server" in {
