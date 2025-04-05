@@ -28,7 +28,7 @@ import scamper.http.server.{ HttpServer as RealHttpServer, Router as RealRouter,
 import scamper.http.websocket.WebSocketApplication
 
 /** Defines router. */
-abstract class Router private[scurry] (router: RealRouter):
+class Router private[scurry] (router: RealRouter):
   import Router.*
 
   /** Gets mount path. */
@@ -205,8 +205,6 @@ abstract class Router private[scurry] (router: RealRouter):
     this
 
 private object Router:
-  private class RouterWrapper(router: RealRouter) extends Router(router)
-
   def toRequestMethods(methods: AnyRef): Seq[RequestMethod] =
     methods match
       case null                  => Nil
@@ -240,7 +238,7 @@ private object Router:
     session => app(WebSocket(session))
 
   def toRouterApplication(app: Router => AnyRef): RouterApplication =
-    router => app(RouterWrapper(router))
+    router => app(new Router(router))
 
   def toErrorHandler(handler: (HttpRequest, Throwable) => AnyRef): ErrorHandler =
     req => { err => handler(ServerSideHttpRequest(req), err) match

@@ -4,16 +4,27 @@
 
 The Groovy-_esque_ wrapper for [Scamper](https://github.com/losizm/scamper).
 
+Although there are no references to Groovy in codebase, this library is intended
+for Groovy developers. It defines an interface to Scamper using a mixture of
+static and dynamic typing to provide a fluid programming experience.
 
-## Let's Scurry!
+## Getting Started
 
-Although there are no references to Groovy itself in the codebase, this library
-is intended for Groovy developers. It defines an interface to Scamper using a
-mixture of static and dynamic typing to provide a fluid programming experience.
+To get started, add **Scurry** to your sbt project:
+
+```scala
+libraryDependencies += "com.github.losizm" %% "scurry" % "1.0.0"
+```
+
+You'll need **Scamper** as well:
+
+```scala
+libraryDependencies += "com.github.losizm" %% "scamper" % "42.0.0"
+```
 
 ### HTTP Server
 
-Here's a quick example of running an HTTP server:
+Here's an example Groovy script to run an HTTP server:
 
 ```groovy
 import scurry.http.HttpServer
@@ -68,7 +79,7 @@ Thread.start {
 
 ### HTTP Client
 
-In the following example, the HTTP client talks to the server created in the
+In this Groovy script example, the HTTP client talks to the server created in
 previous section:
 
 ```groovy
@@ -99,6 +110,11 @@ client.post(target: '/echo', body: null) { res ->
   else                println "[client] Oops! ${res.body.toString(8192)}"
 }
 ```
+
+## API Documentation
+
+See [scaladoc](https://losizm.github.io/scurry/latest/api/index.html) for
+additional details.
 
 ## License
 
